@@ -1,10 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User = require('../models/User');
 const asyncHandler = require('../middleware/asyncHandler');
 const ErrorResponse = require('../utils/errorResponse');
 const { protect } = require('../middleware/auth');
+
+// Stripe lazy init — sadece key varsa yükle
+const getStripe = () => {
+  if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_your')) {
+    throw new ErrorResponse('Stripe yapılandırılmadı', 503);
+  }
+  return require('stripe')(process.env.STRIPE_SECRET_KEY);
+};
 
 const PLANS = {
   basic: { priceId: 'price_basic', amount: 9900, name: 'Basic', currency: 'try' },     // 99 TL
@@ -26,12 +33,14 @@ router.post('/checkout', protect, asyncHandler(async (req, res, next) => {
 
   let customerId = user.subscription.stripeCustomerId;
   if (!customerId) {
+    const stripe = getStripe();
     const customer = await stripe.customers.create({ email: user.email, name: user.name });
     customerId = customer.id;
     user.subscription.stripeCustomerId = customerId;
     await user.save({ validateBeforeSave: false });
   }
 
+  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: 'subscription',
@@ -51,6 +60,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   let event;
 
   try {
+    const stripe = getStripe();
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
