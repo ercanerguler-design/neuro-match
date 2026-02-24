@@ -1,0 +1,76 @@
+version: '3.9'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: neuro-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: neuro_secret_2024
+      MONGO_INITDB_DATABASE: neuromatch
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - neuro-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: neuro-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - neuro-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: neuro-backend
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+      - redis
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - MONGO_URI=mongodb://admin:neuro_secret_2024@mongodb:27017/neuromatch?authSource=admin
+      - JWT_SECRET=neuro_jwt_super_secret_2024_dev
+      - JWT_EXPIRE=30d
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/logs:/app/logs
+      - ./backend/uploads:/app/uploads
+    networks:
+      - neuro-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: neuro-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api/v1
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - neuro-network
+
+networks:
+  neuro-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
