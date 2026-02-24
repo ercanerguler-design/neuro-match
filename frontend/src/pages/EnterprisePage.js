@@ -1,9 +1,10 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
+import toast from 'react-hot-toast';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
-import { enterpriseAPI } from '../services/api';
+import { enterpriseAPI, adminAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 
 const FEATURE_ICONS = ['👥', '🔥', '🎯', '📊', '🤖', '🔒'];
@@ -15,6 +16,12 @@ export default function EnterprisePage() {
 
   // ── Enterprise Dashboard (for enterprise/admin users) ─────────────────────
   const EnterpriseDashboard = () => {
+    const navigate = useNavigate();
+    const [actionModal, setActionModal] = useState(null); // 'analysis' | 'addMember' | null
+    const [addMemberForm, setAddMemberForm] = useState({ name: '', email: '', password: '' });
+    const [analysisData, setAnalysisData] = useState(null);
+    const [actionLoading, setActionLoading] = useState(false);
+
     const { data: dashData, isLoading: dashLoading } = useQuery('enterpriseDashboard', () => enterpriseAPI.getDashboard(), { staleTime: 60000 });
     const { data: hrData } = useQuery('hrInsights', () => enterpriseAPI.getHRInsights(), { staleTime: 60000 });
 
@@ -23,6 +30,53 @@ export default function EnterprisePage() {
 
     const brainBalance = hr.teamBalance || { analytical: 3, creative: 2, empathetic: 4, strategic: 1 };
     const total = Object.values(brainBalance).reduce((a, b) => a + b, 0) || 1;
+
+    const handleTeamAnalysis = async () => {
+      setActionLoading(true);
+      try {
+        const res = await enterpriseAPI.teamAnalysis([]);
+        setAnalysisData(res.data?.data);
+        setActionModal('analysis');
+      } catch {
+        toast.error(lang === 'tr' ? 'Analiz yüklenemedi' : 'Failed to load analysis');
+      } finally {
+        setActionLoading(false);
+      }
+    };
+
+    const handleDownloadReport = () => {
+      const report = {
+        generatedAt: new Date().toISOString(),
+        teamCompatibility: `%${dash.teamCompatibility ?? 87}`,
+        burnoutRisk: `%${dash.burnoutRisk ?? 23}`,
+        productivityScore: dash.productivityScore ?? 91,
+        brainDistribution: brainBalance,
+        teamSize: total,
+      };
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `neuro-match-report-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(lang === 'tr' ? 'Rapor indirildi!' : 'Report downloaded!');
+    };
+
+    const handleAddMember = async (e) => {
+      e.preventDefault();
+      setActionLoading(true);
+      try {
+        await adminAPI.createUser({ ...addMemberForm, role: 'user', subscription: { plan: 'enterprise' } });
+        toast.success(lang === 'tr' ? 'Üye başarıyla eklendi!' : 'Member added successfully!');
+        setActionModal(null);
+        setAddMemberForm({ name: '', email: '', password: '' });
+      } catch (err) {
+        toast.error(err?.response?.data?.message || (lang === 'tr' ? 'Üye eklenemedi' : 'Failed to add member'));
+      } finally {
+        setActionLoading(false);
+      }
+    };
 
     const brainColors = { analytical: '#00d4ff', creative: '#7c3aed', empathetic: '#10b981', strategic: '#f59e0b' };
     const brainLabels = {
@@ -134,19 +188,88 @@ export default function EnterprisePage() {
             </h3>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               {[
-                { label: lang === 'tr' ? '📊 Ekip Analizi' : '📊 Team Analysis', href: '#' },
-                { label: lang === 'tr' ? '👤 Üye Ekle' : '👤 Add Member', href: '#' },
-                { label: lang === 'tr' ? '📈 Rapor İndir' : '📈 Download Report', href: '#' },
-                { label: lang === 'tr' ? '🎯 İşe Alım Modu' : '🎯 Hiring Mode', href: '#' },
+                { label: lang === 'tr' ? '📊 Ekip Analizi' : '📊 Team Analysis', onClick: handleTeamAnalysis },
+                { label: lang === 'tr' ? '👤 Üye Ekle' : '👤 Add Member', onClick: () => setActionModal('addMember') },
+                { label: lang === 'tr' ? '📈 Rapor İndir' : '📈 Download Report', onClick: handleDownloadReport },
+                { label: lang === 'tr' ? '🎯 İşe Alım Modu' : '🎯 Hiring Mode', onClick: () => navigate('/match') },
               ].map((action) => (
-                <a key={action.label} href={action.href} className="btn" style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: '#00d4ff', padding: '10px 20px', borderRadius: 10, textDecoration: 'none', fontSize: 14, fontWeight: 600, transition: 'all .2s' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,212,255,0.2)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                <button
+                  key={action.label}
+                  onClick={action.onClick}
+                  disabled={actionLoading}
+                  style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', color: '#00d4ff', padding: '10px 20px', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: actionLoading ? 'not-allowed' : 'pointer', transition: 'all .2s', opacity: actionLoading ? 0.6 : 1 }}
+                  onMouseEnter={(e) => { if (!actionLoading) { e.currentTarget.style.background = 'rgba(0,212,255,0.2)'; e.currentTarget.style.transform = 'translateY(-2px)'; } }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(0,212,255,0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
                   {action.label}
-                </a>
+                </button>
               ))}
             </div>
           </div>
+
+          {/* Team Analysis Modal */}
+          {actionModal === 'analysis' && analysisData && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setActionModal(null)}>
+              <div className="card" style={{ maxWidth: 500, width: '90%', maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h3 style={{ fontWeight: 700 }}>{lang === 'tr' ? '📊 Ekip Analizi' : '📊 Team Analysis'}</h3>
+                  <button onClick={() => setActionModal(null)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 20 }}>✕</button>
+                </div>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+                  <div style={{ flex: 1, textAlign: 'center', padding: 12, borderRadius: 8, background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: '#00d4ff' }}>{analysisData.teamSize}</div>
+                    <div style={{ fontSize: 12, color: '#94a3b8' }}>{lang === 'tr' ? 'Üye' : 'Members'}</div>
+                  </div>
+                  <div style={{ flex: 1, textAlign: 'center', padding: 12, borderRadius: 8, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: '#10b981' }}>%{analysisData.overallCompatibility}</div>
+                    <div style={{ fontSize: 12, color: '#94a3b8' }}>{lang === 'tr' ? 'Uyum' : 'Compatibility'}</div>
+                  </div>
+                </div>
+                <h4 style={{ fontWeight: 600, marginBottom: 10, fontSize: 14 }}>{lang === 'tr' ? '💡 Öneriler:' : '💡 Recommendations:'}</h4>
+                {(analysisData.recommendations || []).map((r, i) => (
+                  <div key={i} style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.1)', marginBottom: 8, fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>
+                    ✅ {r}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Add Member Modal */}
+          {actionModal === 'addMember' && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setActionModal(null)}>
+              <div className="card" style={{ maxWidth: 400, width: '90%' }} onClick={(e) => e.stopPropagation()}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <h3 style={{ fontWeight: 700 }}>{lang === 'tr' ? '👤 Üye Ekle' : '👤 Add Member'}</h3>
+                  <button onClick={() => setActionModal(null)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 20 }}>✕</button>
+                </div>
+                <form onSubmit={handleAddMember}>
+                  {[
+                    { key: 'name', label: lang === 'tr' ? 'Ad Soyad' : 'Full Name', type: 'text', placeholder: 'John Doe' },
+                    { key: 'email', label: 'E-posta', type: 'email', placeholder: 'john@company.com' },
+                    { key: 'password', label: lang === 'tr' ? 'Şifre' : 'Password', type: 'password', placeholder: '••••••••' },
+                  ].map((field) => (
+                    <div key={field.key} style={{ marginBottom: 14 }}>
+                      <label style={{ fontSize: 13, color: '#94a3b8', marginBottom: 6, display: 'block' }}>{field.label}</label>
+                      <input
+                        type={field.type}
+                        placeholder={field.placeholder}
+                        value={addMemberForm[field.key]}
+                        onChange={(e) => setAddMemberForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                        required
+                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', color: '#e2e8f0', fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
+                      />
+                    </div>
+                  ))}
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    style={{ width: '100%', background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', border: 'none', borderRadius: 8, padding: '12px', color: '#fff', fontWeight: 700, fontSize: 15, cursor: actionLoading ? 'not-allowed' : 'pointer', marginTop: 4, opacity: actionLoading ? 0.7 : 1 }}>
+                    {actionLoading ? (lang === 'tr' ? 'Ekleniyor...' : 'Adding...') : (lang === 'tr' ? 'Üye Ekle' : 'Add Member')}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </MainLayout>
     );
