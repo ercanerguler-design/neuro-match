@@ -14,8 +14,9 @@ const errorHandler = (err, req, res, next) => {
 
   // Mongoose duplicate key
   if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
-    error = new ErrorResponse(`${field} zaten kullanımda`, 400);
+    const field = err.keyValue ? Object.keys(err.keyValue)[0] : 'Alan';
+    const msg = field === 'email' ? 'Bu email adresi zaten kayıtlı' : `${field} zaten kullanımda`;
+    error = new ErrorResponse(msg, 400);
   }
 
   // Mongoose validation error

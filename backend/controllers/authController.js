@@ -8,7 +8,12 @@ const crypto = require('crypto');
 // @route   POST /api/v1/auth/register
 // @access  Public
 exports.register = asyncHandler(async (req, res, next) => {
-  const { name, email, password, birthDate, gender } = req.body;
+  const { name, password, birthDate, gender } = req.body;
+  const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
+
+  if (!email) {
+    return next(new ErrorResponse('Email adresi gereklidir', 400));
+  }
 
   const userExists = await User.findOne({ email });
   if (userExists) {
