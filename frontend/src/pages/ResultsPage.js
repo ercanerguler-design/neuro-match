@@ -18,7 +18,7 @@ export default function ResultsPage() {
   const [dots, setDots] = useState('.');
   const { updateUser } = useAuthStore();
 
-  const { data: analysis, isLoading, refetch } = useQuery(
+  const { data: analysis, isLoading } = useQuery(
     ['analysis', id],
     () => analysisAPI.getAnalysis(id),
     {
@@ -44,6 +44,7 @@ export default function ResultsPage() {
         }});
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analysis?.status]);
 
   useEffect(() => {

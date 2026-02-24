@@ -119,9 +119,9 @@ export default function RegisterPage() {
 
         <p style={{ textAlign: 'center', marginTop: 12, color: '#64748b', fontSize: 12 }}>
           {lang === 'tr' ? 'Kaydolarak' : 'By signing up, you agree to our'}{' '}
-          <a href="#" style={{ color: '#00d4ff' }}>{lang === 'tr' ? 'Kullanım Koşulları' : 'Terms of Service'}</a>
+          <button type="button" style={{ color: '#00d4ff', background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}>{lang === 'tr' ? 'Kullanım Koşulları' : 'Terms of Service'}</button>
           {lang === 'tr' ? "'nı ve " : ' and '}{' '}
-          <a href="#" style={{ color: '#00d4ff' }}>{lang === 'tr' ? 'Gizlilik Politikası' : 'Privacy Policy'}</a>
+          <button type="button" style={{ color: '#00d4ff', background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}>{lang === 'tr' ? 'Gizlilik Politikası' : 'Privacy Policy'}</button>
           {lang === 'tr' ? "'nı kabul ediyorsunuz." : '.'}
         </p>
       </div>
