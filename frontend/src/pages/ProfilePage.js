@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import toast from 'react-hot-toast';
 import { userAPI } from '../services/api';
 import MainLayout from '../components/MainLayout';
@@ -12,7 +12,7 @@ export default function ProfilePage() {
   const [checkinData, setCheckinData] = useState({ mood: 7, energy: 7, stress: 3, focus: 7 });
   const [sleepData, setSleepData] = useState({ duration: 7, quality: 7, bedTime: '23:00', wakeTime: '07:00' });
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit } = useForm({
     defaultValues: { name: user?.name, phone: user?.phone },
   });
 
