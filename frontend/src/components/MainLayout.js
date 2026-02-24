@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { useLanguage } from '../context/LanguageContext';
@@ -10,6 +10,23 @@ export default function MainLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [hoveredPath, setHoveredPath] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setSidebarOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Sayfa değişince mobilde menüyü kapat
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [location.pathname, isMobile]);
 
   const isEnterprise = user?.subscription?.plan === 'enterprise' || user?.role === 'enterprise' || user?.role === 'admin';
 
@@ -32,12 +49,53 @@ export default function MainLayout({ children }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0a0a1a' }}>
+
+      {/* Mobil overlay */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+            zIndex: 40, backdropFilter: 'blur(2px)',
+          }}
+        />
+      )}
+
+      {/* Mobil hamburger butonu */}
+      {isMobile && (
+        <button
+          onClick={() => setSidebarOpen(prev => !prev)}
+          style={{
+            position: 'fixed', top: 14, left: 14, zIndex: 60,
+            background: '#0d0d24', border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: 10, width: 42, height: 42, cursor: 'pointer',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', gap: 5, boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+          }}
+        >
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{
+              display: 'block', width: 20, height: 2, borderRadius: 2,
+              background: sidebarOpen ? '#00d4ff' : '#94a3b8',
+              transition: 'all 0.2s',
+              transform: sidebarOpen
+                ? i === 0 ? 'translateY(7px) rotate(45deg)'
+                  : i === 2 ? 'translateY(-7px) rotate(-45deg)'
+                  : 'scaleX(0)'
+                : 'none',
+            }} />
+          ))}
+        </button>
+      )}
+
       {/* Sidebar */}
       <aside style={{
         width: 260, background: '#0d0d24',
         borderRight: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', flexDirection: 'column',
-        position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50,
+        position: 'fixed', top: 0, bottom: 0, zIndex: 50,
+        left: isMobile ? (sidebarOpen ? 0 : -270) : 0,
+        transition: isMobile ? 'left 0.25s ease' : 'none',
         boxShadow: '4px 0 24px rgba(0,0,0,0.4)',
       }}>
         {/* Logo */}
@@ -145,8 +203,14 @@ export default function MainLayout({ children }) {
       </aside>
 
       {/* Main content */}
-      <main style={{ flex: 1, marginLeft: 260, minHeight: '100vh', background: '#0a0a1a', overflowX: 'hidden' }}>
-        <div style={{ padding: 32, maxWidth: '100%' }}>
+      <main style={{
+        flex: 1,
+        marginLeft: isMobile ? 0 : 260,
+        minHeight: '100vh',
+        background: '#0a0a1a',
+        overflowX: 'hidden',
+      }}>
+        <div style={{ padding: isMobile ? '64px 16px 24px' : 32, maxWidth: '100%' }}>
           {children}
         </div>
       </main>
