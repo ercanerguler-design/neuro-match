@@ -4,7 +4,22 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
+const xss = require('xss');
+
+// XSS clean middleware (xss-clean yerine)
+const xssClean = (req, res, next) => {
+  if (req.body) {
+    const clean = (obj) => {
+      if (typeof obj === 'string') return xss(obj);
+      if (typeof obj === 'object' && obj !== null) {
+        Object.keys(obj).forEach((k) => { obj[k] = clean(obj[k]); });
+      }
+      return obj;
+    };
+    req.body = clean(req.body);
+  }
+  next();
+};
 const hpp = require('hpp');
 const rateLimit = require('express-rate-limit');
 const errorHandler = require('./middleware/errorHandler');
@@ -26,7 +41,7 @@ const app = express();
 // Security middleware
 app.use(helmet());
 app.use(mongoSanitize());
-app.use(xss());
+app.use(xssClean);
 app.use(hpp());
 
 // Rate limiting
