@@ -1,22 +1,23 @@
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+require('dotenv').config();
 
 const mongoose = require('mongoose');
 const app = require('../app');
 
-// MongoDB bağlantısını lazy yönet — serverless'ta her invocation'da kontrol et
-let isConnected = false;
+let cachedConn = null;
 
-const connectIfNeeded = async () => {
-  if (isConnected && mongoose.connection.readyState === 1) return;
-  await mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  isConnected = true;
+const connectDB = async () => {
+  if (cachedConn && mongoose.connection.readyState === 1) return cachedConn;
+  cachedConn = await mongoose.connect(process.env.MONGO_URI);
+  return cachedConn;
 };
 
 // Vercel serverless handler
 module.exports = async (req, res) => {
-  await connectIfNeeded();
-  return app(req, res);
+  try {
+    await connectDB();
+    return app(req, res);
+  } catch (err) {
+    console.error('HANDLER ERROR:', err);
+    return res.status(500).json({ error: 'Internal Server Error', detail: err.message });
+  }
 };
