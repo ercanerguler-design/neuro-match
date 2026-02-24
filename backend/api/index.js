@@ -1,15 +1,7 @@
 require('dotenv').config();
 
-const mongoose = require('mongoose');
+const connectDB = require('../config/db');
 const app = require('../app');
-
-let cachedConn = null;
-
-const connectDB = async () => {
-  if (cachedConn && mongoose.connection.readyState === 1) return cachedConn;
-  cachedConn = await mongoose.connect(process.env.MONGO_URI);
-  return cachedConn;
-};
 
 // Vercel serverless handler
 module.exports = async (req, res) => {
