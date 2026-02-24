@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
-import toast from 'react-hot-toast';
 import { matchAPI } from '../services/api';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
@@ -14,10 +13,9 @@ const MATCH_TYPES = [
 
 export default function MatchPage() {
   const [selectedType, setSelectedType] = useState('professional');
-  const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
 
-  const { data: compatibles, refetch, isFetching } = useQuery(
+  const { data: compatibles, isFetching } = useQuery(
     ['compatibles', selectedType],
     () => matchAPI.findCompatible(selectedType),
     { select: (res) => res.data.data, enabled: !!user?.neuroProfile?.brainType }

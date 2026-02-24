@@ -24,6 +24,7 @@ export default function CoachPage() {
       content: `Merhaba ${user?.name?.split(' ')[0]}! 👋 Ben senin kişisel AI koçunum.\n\nBeyin tipin **${user?.neuroProfile?.brainType || 'henüz belirlenmedi'}** profiline göre sana özel rehberlik sunuyorum. Bugün sana nasıl yardımcı olabilirim?`,
       time: new Date(),
     }]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -260,7 +260,7 @@ export default function LandingPage() {
             ? ['Privacy Policy', 'Terms of Service', 'GDPR', 'Contact']
             : ['Gizlilik Politikası', 'Kullanım Koşulları', 'KVKK', 'İletişim']
           ).map((link) => (
-            <a key={link} href="#" style={{ color: '#64748b', textDecoration: 'none', fontSize: 14 }}>{link}</a>
+            <button key={link} type="button" onClick={() => {}} style={{ color: '#64748b', textDecoration: 'none', fontSize: 14, background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}>{link}</button>
           ))}
         </div>
       </footer>
