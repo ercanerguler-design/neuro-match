@@ -1,9 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import toast from 'react-hot-toast';
 
 export default function PricingPage() {
   const { t, lang } = useLanguage();
+  const navigate = useNavigate();
 
   const p = (t.pricing && t.pricing.plans) || {};
   const mo = (t.pricing && t.pricing.mo) || '/ay';
@@ -50,18 +52,41 @@ export default function PricingPage() {
     },
   ];
 
-  const handleUpgrade = async (planId) => {
+  const handleUpgrade = async (planId, planName) => {
     const token = localStorage.getItem('neuro-auth');
-    if (!token) {
-      window.location.href = '/register';
-      return;
-    }
+    if (!token) { navigate('/register'); return; }
     try {
       const { paymentAPI } = await import('../services/api');
       const res = await paymentAPI.createCheckout(planId);
-      window.location.href = res.data.checkoutUrl;
+      const data = res.data;
+
+      // Ödeme sistemi henüz aktif değil
+      if (data.paymentDisabled) {
+        toast.success(
+          lang === 'en'
+            ? '✅ You\'re on the free period. Payment will be activated soon!'
+            : '✅ Ücretsiz dönemdeyiz. Ödeme yakında aktif olacak!',
+          { duration: 4000 }
+        );
+        return;
+      }
+
+      // Stripe → hosted checkout page
+      if (data.provider === 'stripe' && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+
+      // iyzico → embedded form page
+      if (data.provider === 'iyzico' && data.iyzicoFormContent) {
+        navigate('/payment', { state: { iyzicoFormContent: data.iyzicoFormContent, planName } });
+        return;
+      }
+
+      // Fallback
+      toast.error(lang === 'en' ? 'Payment not available right now.' : 'Ödeme şu an mevcut değil.');
     } catch {
-      window.location.href = '/register';
+      navigate('/register');
     }
   };
 
@@ -109,7 +134,7 @@ export default function PricingPage() {
                     {plan.cta}
                   </Link>
                 ) : (
-                  <button onClick={() => handleUpgrade(plan.planId)} className={`btn ${plan.popular ? 'btn-primary' : 'btn-secondary'}`} style={{ width: '100%' }}>
+                  <button onClick={() => handleUpgrade(plan.planId, plan.name)} className={`btn ${plan.popular ? 'btn-primary' : 'btn-secondary'}`} style={{ width: '100%' }}>
                     {plan.cta}
                   </button>
                 )}

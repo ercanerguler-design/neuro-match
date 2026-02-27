@@ -26,6 +26,9 @@ const KVKKPage = React.lazy(() => import('./pages/KVKKPage'));
 const ContactPage = React.lazy(() => import('./pages/ContactPage'));
 const ContentPage = React.lazy(() => import('./pages/ContentPage'));
 const CommunityPage = React.lazy(() => import('./pages/CommunityPage'));
+const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
+const PaymentSuccessPage = React.lazy(() => import('./pages/PaymentSuccessPage'));
+const PaymentFailedPage = React.lazy(() => import('./pages/PaymentFailedPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,6 +94,11 @@ export default function App() {
             <Route path="/content" element={<ProtectedRoute><ContentPage /></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+
+            {/* Payment */}
+            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/payment/success" element={<PaymentSuccessPage />} />
+            <Route path="/payment/failed" element={<PaymentFailedPage />} />
 
             {/* Legal & Contact */}
             <Route path="/privacy" element={<PrivacyPolicyPage />} />
