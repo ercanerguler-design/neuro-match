@@ -11,7 +11,9 @@ export default function CommunityPage() {
   const { user } = useAuthStore();
   const qc = useQueryClient();
   const { t, lang } = useLanguage();
-  const myBrain = user?.neuroProfile?.brainType || 'analytical';
+  const VALID_ROOMS = ['analytical', 'creative', 'empathetic', 'strategic'];
+  const rawBrain = (user?.neuroProfile?.brainType || '').toLowerCase();
+  const myBrain = VALID_ROOMS.includes(rawBrain) ? rawBrain : 'analytical';
   const [activeRoom, setActiveRoom] = useState(myBrain);
   const [newPost, setNewPost] = useState('');
 
@@ -30,10 +32,11 @@ export default function CommunityPage() {
   const BRAIN_LABELS = (t.match && t.match.brainLabels) || { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
   const currentRoom = ROOMS.find((r) => r.key === activeRoom);
 
+  const safeRoom = VALID_ROOMS.includes(activeRoom) ? activeRoom : 'analytical';
   const { data: postsData, isLoading } = useQuery(
-    ['community', activeRoom],
-    () => communityAPI.getPosts(activeRoom),
-    { select: (res) => res.data.data, staleTime: 30000 }
+    ['community', safeRoom],
+    () => communityAPI.getPosts(safeRoom),
+    { select: (res) => res.data.data, staleTime: 30000, enabled: VALID_ROOMS.includes(activeRoom) }
   );
   const roomPosts = postsData || [];
 

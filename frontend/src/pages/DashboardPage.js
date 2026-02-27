@@ -84,22 +84,25 @@ export default function DashboardPage() {
     }
   );
 
-  // Use dashboard API data as source of truth; fall back to store for immediate render
-  const liveNeuroProfile = dashboard?.neuroProfile || user?.neuroProfile;
-  const liveBrainType = (liveNeuroProfile?.brainType || '').toLowerCase();
+  // Derive brainType from each source independently (avoid truthy empty-object {} trap from Mongoose)
+  const dashBT = (dashboard?.neuroProfile?.brainType || '').toLowerCase();
+  const storeBT = (user?.neuroProfile?.brainType || '').toLowerCase();
+  const liveBrainType = dashBT || storeBT;
+  const liveNeuroProfile = liveBrainType
+    ? (dashBT ? dashboard.neuroProfile : user?.neuroProfile)
+    : (dashboard?.neuroProfile || user?.neuroProfile);
 
-  // Also call /auth/me as backup if dashboard loaded but brainType still missing
+  // Always refresh /auth/me on mount to sync latest brainType into store
   useEffect(() => {
-    if (!dashLoading && !liveBrainType) {
-      authAPI.getMe().then((res) => {
-        const u = res?.data?.data;
-        if (u?.neuroProfile?.brainType) {
-          updateUser({ neuroProfile: { ...u.neuroProfile, brainType: u.neuroProfile.brainType.toLowerCase() } });
-        }
-      }).catch(() => {});
-    }
+    authAPI.getMe().then((res) => {
+      const u = res?.data?.data;
+      if (u?.neuroProfile?.brainType) {
+        const bt = u.neuroProfile.brainType.toLowerCase();
+        updateUser({ neuroProfile: { ...u.neuroProfile, brainType: bt } });
+      }
+    }).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dashLoading, liveBrainType]);
+  }, []);
 
   const { data: coachData } = useQuery(
     'daily-coach',
