@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { userAPI, coachAPI } from '../services/api';
+import { userAPI, coachAPI, authAPI } from '../services/api';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
 import { useLanguage } from '../context/LanguageContext';
@@ -73,6 +73,7 @@ export default function DashboardPage() {
     userAPI.getDashboard,
     {
       select: (res) => res.data.data,
+      staleTime: 0,           // always fetch fresh — brainType must be up to date
       onSuccess: (data) => {
         // Sync fresh neuroProfile from server into Zustand store
         if (data?.neuroProfile?.brainType) {
@@ -86,6 +87,19 @@ export default function DashboardPage() {
   // Use dashboard API data as source of truth; fall back to store for immediate render
   const liveNeuroProfile = dashboard?.neuroProfile || user?.neuroProfile;
   const liveBrainType = (liveNeuroProfile?.brainType || '').toLowerCase();
+
+  // Also call /auth/me as backup if dashboard loaded but brainType still missing
+  useEffect(() => {
+    if (!dashLoading && !liveBrainType) {
+      authAPI.getMe().then((res) => {
+        const u = res?.data?.data;
+        if (u?.neuroProfile?.brainType) {
+          updateUser({ neuroProfile: { ...u.neuroProfile, brainType: u.neuroProfile.brainType.toLowerCase() } });
+        }
+      }).catch(() => {});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dashLoading, liveBrainType]);
 
   const { data: coachData } = useQuery(
     'daily-coach',
@@ -144,15 +158,15 @@ export default function DashboardPage() {
 
   const stats = [
     {
-      icon: hasProfile ? ({ analytical: '🔢', creative: '🎨', empathetic: '💙', strategic: '♟️' }[normalizedBrainType] || '❓') : '❓',
+      icon: dashLoading && !hasProfile ? '⏳' : (hasProfile ? ({ analytical: '🔢', creative: '🎨', empathetic: '💙', strategic: '♟️' }[normalizedBrainType] || '🧠') : '❓'),
       label: d.brainTypeLabel,
-      value: hasProfile ? brainLabel : d.notDetermined,
+      value: dashLoading && !hasProfile ? '...' : (hasProfile ? brainLabel : d.notDetermined),
       color: brainColor,
-      sub: hasProfile ? null : '→ ' + (lang === 'tr' ? 'Analiz yap' : 'Run analysis'),
+      sub: hasProfile ? null : (dashLoading ? null : '→ ' + (lang === 'tr' ? 'Analiz yap' : 'Run analysis')),
     },
     {
       icon: '⚡', label: d.neuroScore,
-      value: hasProfile ? String(liveNeuroProfile?.overallScore || 0) : d.notSet,
+      value: dashLoading && !hasProfile ? '...' : (hasProfile ? String(liveNeuroProfile?.overallScore || 0) : d.notSet),
       color: '#10b981', sub: hasProfile ? '/100' : null,
     },
     {

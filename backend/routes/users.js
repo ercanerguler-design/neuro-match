@@ -99,6 +99,16 @@ router.post('/sleep', asyncHandler(async (req, res) => {
 // Get dashboard stats
 router.get('/dashboard', asyncHandler(async (req, res) => {
   const user = await User.findById(req.user.id);
+
+  // Auto-fix: normalize brainType to lowercase (one-time migration for old capitalized values)
+  if (user.neuroProfile?.brainType) {
+    const normalized = user.neuroProfile.brainType.toLowerCase();
+    if (normalized !== user.neuroProfile.brainType) {
+      await User.findByIdAndUpdate(req.user.id, { 'neuroProfile.brainType': normalized });
+      user.neuroProfile.brainType = normalized;
+    }
+  }
+
   const recentCheckins = user.dailyCheckin.slice(-30); // last 30 for trend
   const recentSleep = user.sleepData.slice(-7);
 
