@@ -138,10 +138,11 @@ const processAnalysis = async (analysisId, userId, type, data) => {
       processingTime: Date.now() - startTime,
     });
 
-    // Update user's neuro profile
+    // Update user's neuro profile (normalize brainType to lowercase)
+    const brainType = (aiResult.brainType || 'analytical').toLowerCase().trim();
     await User.findByIdAndUpdate(userId, {
       neuroProfile: {
-        brainType: aiResult.brainType,
+        brainType,
         energyRhythm: aiResult.energyRhythm,
         decisionStyle: aiResult.decisionStyle,
         stressResponse: aiResult.stressResponse,

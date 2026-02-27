@@ -1,14 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from 'react-query';
-import { matchAPI } from '../services/api';
+import { matchAPI, authAPI } from '../services/api';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function MatchPage() {
   const [selectedType, setSelectedType] = useState('professional');
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const { t, lang } = useLanguage();
+  const [profileChecked, setProfileChecked] = useState(false);
+
+  // Normalize brainType to lowercase from store
+  const rawBrainType = user?.neuroProfile?.brainType;
+  const hasBrainType = !!rawBrainType;
+
+  // Auto-refresh user from server once on mount if local store shows no brainType
+  // (handles case where analysis was completed but store was not updated)
+  useEffect(() => {
+    if (!hasBrainType) {
+      authAPI.getMe()
+        .then((res) => {
+          const freshUser = res?.data?.data;
+          if (freshUser) updateUser(freshUser);
+        })
+        .catch(() => {})
+        .finally(() => setProfileChecked(true));
+    } else {
+      setProfileChecked(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Use normalized brainType (lowercase) everywhere
+  const myBrainType = rawBrainType ? rawBrainType.toLowerCase() : null;
 
   const MATCH_TYPES = (t.match && t.match.matchTypes) || [
     { value: 'professional', label: 'İş Ortağı', icon: '💼', desc: 'En uyumlu iş ortağını bul' },
@@ -30,14 +55,26 @@ export default function MatchPage() {
   const { data: compatibles, isFetching } = useQuery(
     ['compatibles', selectedType],
     () => matchAPI.findCompatible(selectedType),
-    { select: (res) => res.data.data, enabled: !!user?.neuroProfile?.brainType }
+    { select: (res) => res.data.data, enabled: !!myBrainType }
   );
 
   const { data: myMatches } = useQuery('my-matches', matchAPI.getMyMatches, {
     select: (res) => res.data.data,
   });
 
-  if (!user?.neuroProfile?.brainType) {
+  // Show loading while we verify the profile from server
+  if (!profileChecked) {
+    return (
+      <MainLayout>
+        <div style={{ textAlign: 'center', paddingTop: 120 }}>
+          <div className="loading-spinner" style={{ width: 48, height: 48, margin: '0 auto 24px' }} />
+          <p style={{ color: '#94a3b8' }}>{lang === 'en' ? 'Loading your profile...' : 'Profil yükleniyor...'}</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!myBrainType) {
     return (
       <MainLayout>
         <div style={{ textAlign: 'center', paddingTop: 80 }}>
@@ -70,7 +107,7 @@ export default function MatchPage() {
 
         {/* Startup Co-founder Panel */}
         {selectedType === 'startup' && (() => {
-          const myBrain = user?.neuroProfile?.brainType;
+          const myBrain = myBrainType || 'strategic';
           const roleInfo = CO_FOUNDER_ROLES[myBrain] || CO_FOUNDER_ROLES.strategic;
           const brainIcons = { analytical: '🔢', creative: '🎨', empathetic: '💙', strategic: '♟️' };
           const localBrainLabels = brainLabels;
@@ -120,7 +157,10 @@ export default function MatchPage() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, marginBottom: 4 }}>{u.name}</div>
                     <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 8 }}>
-                      {u.neuroProfile?.brainType === 'analytical' ? `🔢 ${brainLabels.analytical}` : u.neuroProfile?.brainType === 'creative' ? `🎨 ${brainLabels.creative}` : u.neuroProfile?.brainType === 'empathetic' ? `💙 ${brainLabels.empathetic}` : `♟️ ${brainLabels.strategic}`}
+                      {(() => {
+                        const bt = (u.neuroProfile?.brainType || '').toLowerCase();
+                        return bt === 'analytical' ? `🔢 ${brainLabels.analytical}` : bt === 'creative' ? `🎨 ${brainLabels.creative}` : bt === 'empathetic' ? `💙 ${brainLabels.empathetic}` : bt === 'strategic' ? `♟️ ${brainLabels.strategic}` : bt;
+                      })()}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div className="progress-bar" style={{ flex: 1 }}>

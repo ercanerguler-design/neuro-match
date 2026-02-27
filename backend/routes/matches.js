@@ -59,9 +59,12 @@ router.get('/find/:matchType', asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Önce analizini tamamla', 400));
   }
 
+  // Normalize current user's brainType in memory for scoring
+  currentUser.neuroProfile.brainType = currentUser.neuroProfile.brainType.toLowerCase();
+
   const compatibleUsers = await User.find({
     _id: { $ne: req.user.id },
-    'neuroProfile.brainType': { $exists: true },
+    'neuroProfile.brainType': { $exists: true, $nin: [null, ''] },
     isActive: { $ne: false },
   }).select('name avatar neuroProfile').limit(50);
 
@@ -78,7 +81,9 @@ router.get('/find/:matchType', asyncHandler(async (req, res, next) => {
 function calculateQuickScore(profile1, profile2) {
   let score = 0;
   const compatible = { analytical: ['empathetic', 'creative'], creative: ['strategic', 'analytical'], empathetic: ['analytical', 'strategic'], strategic: ['creative', 'empathetic'] };
-  if (compatible[profile1.brainType]?.includes(profile2.brainType)) score += 30;
+  const bt1 = (profile1.brainType || '').toLowerCase();
+  const bt2 = (profile2.brainType || '').toLowerCase();
+  if (compatible[bt1]?.includes(bt2)) score += 30;
   if (profile1.energyRhythm === profile2.energyRhythm) score += 20;
   if (profile1.socialPattern !== profile2.socialPattern) score += 10;
   score += Math.floor(Math.random() * 20) + 30;

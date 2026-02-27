@@ -103,9 +103,10 @@ export default function DashboardPage() {
   );
 
   const hasProfile = !!user?.neuroProfile?.brainType;
-  const brainColor = BRAIN_TYPE_COLORS[user?.neuroProfile?.brainType] || '#00d4ff';
-  const brainLabel = t.brainTypes[user?.neuroProfile?.brainType] || d.notDetermined;
-  const radarData = buildRadarData(user?.neuroProfile, lang);
+  const normalizedBrainType = (user?.neuroProfile?.brainType || '').toLowerCase();
+  const brainColor = BRAIN_TYPE_COLORS[normalizedBrainType] || '#00d4ff';
+  const brainLabel = t.brainTypes[normalizedBrainType] || d.notDetermined;
+  const radarData = buildRadarData({ ...user?.neuroProfile, brainType: normalizedBrainType }, lang);
 
   // Gamification data
   const gami = dashboard?.gamification || {};
@@ -130,7 +131,7 @@ export default function DashboardPage() {
 
   const stats = [
     {
-      icon: hasProfile ? ({ analytical: '🔢', creative: '🎨', empathetic: '💙', strategic: '♟️' }[user?.neuroProfile?.brainType] || '❓') : '❓',
+      icon: hasProfile ? ({ analytical: '🔢', creative: '🎨', empathetic: '💙', strategic: '♟️' }[normalizedBrainType] || '❓') : '❓',
       label: d.brainTypeLabel,
       value: hasProfile ? brainLabel : d.notDetermined,
       color: brainColor,

@@ -33,11 +33,18 @@ export default function ResultsPage() {
   useEffect(() => {
     if (analysis?.status === 'completed' && analysis?.aiResults?.brainType) {
       authAPI.getMe().then((res) => {
-        if (res.data?.data) updateUser(res.data.data);
+        if (res.data?.data) {
+          // normalize brainType to lowercase before storing
+          const freshUser = res.data.data;
+          if (freshUser.neuroProfile?.brainType) {
+            freshUser.neuroProfile.brainType = freshUser.neuroProfile.brainType.toLowerCase();
+          }
+          updateUser(freshUser);
+        }
       }).catch(() => {
         // Manually update with analysis result if /me fails
         updateUser({ neuroProfile: {
-          brainType: analysis.aiResults.brainType,
+          brainType: (analysis.aiResults.brainType || 'analytical').toLowerCase(),
           overallScore: analysis.aiResults.overallScore,
           energyRhythm: analysis.aiResults.energyRhythm,
           decisionStyle: analysis.aiResults.decisionStyle,
@@ -87,13 +94,14 @@ export default function ResultsPage() {
   }
 
   const results = analysis?.aiResults;
-  const btInfo = BRAIN_TYPE_INFO[results?.brainType] || BRAIN_TYPE_INFO.analytical;
+  const normalizedBrainType = (results?.brainType || '').toLowerCase() || 'analytical';
+  const btInfo = BRAIN_TYPE_INFO[normalizedBrainType] || BRAIN_TYPE_INFO.analytical;
 
   const radarData = [
-    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.analytical && t.results.brainInfo.analytical.label) || 'Analitik', A: results?.brainType === 'analytical' ? 90 : 60 },
-    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.creative && t.results.brainInfo.creative.label) || 'Yaratıcı', A: results?.brainType === 'creative' ? 90 : 65 },
-    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.empathetic && t.results.brainInfo.empathetic.label) || 'Empatik', A: results?.brainType === 'empathetic' ? 90 : 70 },
-    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.strategic && t.results.brainInfo.strategic.label) || 'Stratejik', A: results?.brainType === 'strategic' ? 90 : 68 },
+    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.analytical && t.results.brainInfo.analytical.label) || 'Analitik', A: normalizedBrainType === 'analytical' ? 90 : 60 },
+    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.creative && t.results.brainInfo.creative.label) || 'Yaratıcı', A: normalizedBrainType === 'creative' ? 90 : 65 },
+    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.empathetic && t.results.brainInfo.empathetic.label) || 'Empatik', A: normalizedBrainType === 'empathetic' ? 90 : 70 },
+    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.strategic && t.results.brainInfo.strategic.label) || 'Stratejik', A: normalizedBrainType === 'strategic' ? 90 : 68 },
     { subject: lang === 'en' ? 'Energy' : 'Enerji', A: 75 },
     { subject: lang === 'en' ? 'Social' : 'Sosyal', A: results?.socialPattern === 'extrovert' ? 85 : 55 },
   ];

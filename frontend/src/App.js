@@ -1,9 +1,10 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
 import { LanguageProvider } from './context/LanguageContext';
+import { authAPI } from './services/api';
 
 // ── Error Boundary ────────────────────────────────────────────
 class ErrorBoundary extends React.Component {
@@ -123,11 +124,33 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
+// Auto-refresh user profile on every app boot (ensures neuroProfile is always up to date)
+function AppBootstrap() {
+  const { token, updateUser } = useAuthStore();
+  useEffect(() => {
+    if (!token) return;
+    authAPI.getMe()
+      .then((res) => {
+        const u = res?.data?.data;
+        if (u) {
+          if (u.neuroProfile?.brainType) {
+            u.neuroProfile.brainType = u.neuroProfile.brainType.toLowerCase();
+          }
+          updateUser(u);
+        }
+      })
+      .catch(() => {}); // silent — just a best-effort refresh
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
       <BrowserRouter>
+        <AppBootstrap />
         <ErrorBoundaryWithLocation>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>

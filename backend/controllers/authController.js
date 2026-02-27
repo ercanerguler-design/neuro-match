@@ -81,6 +81,14 @@ exports.login = asyncHandler(async (req, res, next) => {
 // @access  Private
 exports.getMe = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
+  // Auto-fix: normalize brainType to lowercase if it was saved capitalized (migration)
+  if (user?.neuroProfile?.brainType) {
+    const normalized = user.neuroProfile.brainType.toLowerCase();
+    if (normalized !== user.neuroProfile.brainType) {
+      await User.findByIdAndUpdate(req.user.id, { 'neuroProfile.brainType': normalized });
+      user.neuroProfile.brainType = normalized;
+    }
+  }
   res.status(200).json({ success: true, data: user });
 });
 
@@ -155,6 +163,10 @@ const sendTokenResponse = (user, statusCode, res, message) => {
     secure: process.env.NODE_ENV === 'production',
   };
 
+  // Normalize brainType to lowercase
+  const neuroProfile = user.neuroProfile ? { ...user.neuroProfile.toObject?.() || user.neuroProfile } : {};
+  if (neuroProfile.brainType) neuroProfile.brainType = neuroProfile.brainType.toLowerCase();
+
   res.status(statusCode).cookie('token', token, options).json({
     success: true,
     message,
@@ -165,7 +177,7 @@ const sendTokenResponse = (user, statusCode, res, message) => {
       email: user.email,
       role: user.role,
       subscription: user.subscription,
-      neuroProfile: user.neuroProfile,
+      neuroProfile,
       isEmailVerified: user.isEmailVerified,
     },
   });
