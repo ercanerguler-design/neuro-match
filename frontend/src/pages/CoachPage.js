@@ -57,7 +57,9 @@ export default function CoachPage() {
     setMessages([{
       id: 1,
       role: 'assistant',
-      content: `Merhaba ${user?.name?.split(' ')[0]}! 👋 Ben senin kişisel AI koçunum.\n\nBeyin tipin **${user?.neuroProfile?.brainType || 'henüz belirlenmedi'}** profiline göre sana özel rehberlik sunuyorum. Bugün sana nasıl yardımcı olabilirim?`,
+      content: lang === 'en'
+        ? `Hello ${user?.name?.split(' ')[0]}! 👋 I'm your personal AI coach.\n\nBased on your **${user?.neuroProfile?.brainType || 'not yet determined'}** brain profile, I provide personalized guidance. How can I help you today?`
+        : `Merhaba ${user?.name?.split(' ')[0]}! 👋 Ben senin kişisel AI koçunum.\n\nBeyin tipin **${user?.neuroProfile?.brainType || 'henüz belirlenmedi'}** profiline göre sana özel rehberlik sunuyorum. Bugün sana nasıl yardımcı olabilirim?`,
       time: new Date(),
     }]);
   // eslint-disable-next-line react-hooks/exhaustive-deps

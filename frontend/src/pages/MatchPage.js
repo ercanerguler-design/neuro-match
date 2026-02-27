@@ -146,7 +146,7 @@ export default function MatchPage() {
                   <div>
                     <span style={{ fontWeight: 600 }}>{match.target?.name || 'Anonim'}</span>
                     <span style={{ color: '#94a3b8', fontSize: 13, marginLeft: 8 }}>
-                      {MATCH_TYPES.find(t => t.value === match.type)?.label}
+                      {MATCH_TYPES.find(mt => mt.value === match.type)?.label}
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -154,7 +154,7 @@ export default function MatchPage() {
                       %{match.compatibilityScore}
                     </span>
                     <span className="badge badge-primary" style={{ fontSize: 11 }}>
-                      {new Date(match.createdAt).toLocaleDateString('tr-TR')}
+                      {new Date(match.createdAt).toLocaleDateString(lang === 'en' ? 'en-US' : 'tr-TR')}
                     </span>
                   </div>
                 </div>

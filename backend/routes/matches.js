@@ -62,7 +62,7 @@ router.get('/find/:matchType', asyncHandler(async (req, res, next) => {
   const compatibleUsers = await User.find({
     _id: { $ne: req.user.id },
     'neuroProfile.brainType': { $exists: true },
-    isActive: true,
+    isActive: { $ne: false },
   }).select('name avatar neuroProfile').limit(50);
 
   const scoredUsers = compatibleUsers.map((user) => {

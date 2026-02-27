@@ -1,9 +1,61 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
 import { LanguageProvider } from './context/LanguageContext';
+
+// ── Error Boundary ────────────────────────────────────────────
+class ErrorBoundary extends React.Component {
+  state = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('X-Neu ErrorBoundary caught:', error, info);
+  }
+
+  // Reset error when navigating to a different route (key changed)
+  componentDidUpdate(prevProps) {
+    if (prevProps.locationKey !== this.props.locationKey && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh', background: '#0a0a1a',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          gap: 20, padding: 32, textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 56 }}>⚠️</div>
+          <h2 style={{ color: '#ef4444', fontWeight: 700 }}>Bir şeyler yanlış gitti</h2>
+          <p style={{ color: '#64748b', maxWidth: 400 }}>
+            {this.state.error?.message || 'Beklenmedik bir hata oluştu.'}
+          </p>
+          <button
+            onClick={() => { this.setState({ hasError: false, error: null }); window.location.href = '/dashboard'; }}
+            style={{ background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
+          >
+            🏠 Dashboard'a Dön
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Wrapper so ErrorBoundary gets the current location key and resets on route change
+function ErrorBoundaryWithLocation({ children }) {
+  const location = useLocation();
+  return <ErrorBoundary locationKey={location.pathname}>{children}</ErrorBoundary>;
+}
 
 // Pages - Lazy loaded
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
@@ -32,7 +84,12 @@ const PaymentFailedPage = React.lazy(() => import('./pages/PaymentFailedPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, refetchOnWindowFocus: false },
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 30 * 1000,        // 30 saniye cache — geri gelince yeniden yüklemez
+      cacheTime: 5 * 60 * 1000,    // 5 dk cache'de tut
+    },
   },
 });
 
@@ -71,6 +128,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
       <BrowserRouter>
+        <ErrorBoundaryWithLocation>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             {/* Public */}
@@ -110,6 +168,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
+        </ErrorBoundaryWithLocation>
 
         <Toaster
           position="top-right"
