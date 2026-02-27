@@ -58,7 +58,7 @@ function ScoreSlider({ label, value, onChange, color = '#00d4ff' }) {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const { t, lang } = useLanguage();
   const d = t.dashboard;
   const qc = useQueryClient();
@@ -71,15 +71,28 @@ export default function DashboardPage() {
   const { data: dashboard, isLoading: dashLoading } = useQuery(
     'dashboard',
     userAPI.getDashboard,
-    { select: (res) => res.data.data }
+    {
+      select: (res) => res.data.data,
+      onSuccess: (data) => {
+        // Sync fresh neuroProfile from server into Zustand store
+        if (data?.neuroProfile?.brainType) {
+          const bt = data.neuroProfile.brainType.toLowerCase();
+          updateUser({ neuroProfile: { ...data.neuroProfile, brainType: bt } });
+        }
+      },
+    }
   );
+
+  // Use dashboard API data as source of truth; fall back to store for immediate render
+  const liveNeuroProfile = dashboard?.neuroProfile || user?.neuroProfile;
+  const liveBrainType = (liveNeuroProfile?.brainType || '').toLowerCase();
 
   const { data: coachData } = useQuery(
     'daily-coach',
     coachAPI.getDailyMessage,
     {
       select: (res) => res.data.data,
-      enabled: !!user?.neuroProfile?.brainType,
+      enabled: !!liveBrainType,
       retry: 1,
     }
   );
@@ -102,11 +115,11 @@ export default function DashboardPage() {
     }
   );
 
-  const hasProfile = !!user?.neuroProfile?.brainType;
-  const normalizedBrainType = (user?.neuroProfile?.brainType || '').toLowerCase();
+  const hasProfile = !!liveBrainType;
+  const normalizedBrainType = liveBrainType;
   const brainColor = BRAIN_TYPE_COLORS[normalizedBrainType] || '#00d4ff';
   const brainLabel = t.brainTypes[normalizedBrainType] || d.notDetermined;
-  const radarData = buildRadarData({ ...user?.neuroProfile, brainType: normalizedBrainType }, lang);
+  const radarData = buildRadarData({ ...liveNeuroProfile, brainType: normalizedBrainType }, lang);
 
   // Gamification data
   const gami = dashboard?.gamification || {};
@@ -139,7 +152,7 @@ export default function DashboardPage() {
     },
     {
       icon: '⚡', label: d.neuroScore,
-      value: hasProfile ? String(user?.neuroProfile?.overallScore || 0) : d.notSet,
+      value: hasProfile ? String(liveNeuroProfile?.overallScore || 0) : d.notSet,
       color: '#10b981', sub: hasProfile ? '/100' : null,
     },
     {
@@ -280,7 +293,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
               <div style={{ textAlign: 'center', marginTop: 10 }}>
                 <span style={{ fontSize: 13, color: brainColor, fontWeight: 700 }}>
-                  {brainLabel} — {user?.neuroProfile?.overallScore || 0}/100
+                  {brainLabel} — {liveNeuroProfile?.overallScore || 0}/100
                 </span>
               </div>
             </div>

@@ -37,8 +37,15 @@ export default function ProfilePage() {
     onError: () => toast.error((t.profile && t.profile.sleepError) || 'Uyku verisi kaydedilemedi'),
   });
 
-  const btLabels = (t.profile && t.profile.brainTypeLabels) || { analytical: { icon: '🔢', label: 'Analitik', color: '#00d4ff' }, creative: { icon: '🎨', label: 'Yaratıcı', color: '#7c3aed' }, empathetic: { icon: '💙', label: 'Empatik', color: '#10b981' }, strategic: { icon: '♟️', label: 'Stratejik', color: '#f59e0b' } };
-  const bt = btLabels[user?.neuroProfile?.brainType];
+  const btI18n = (t.profile && t.profile.brainTypeLabels) || {};
+  const btLabels = {
+    analytical: { icon: '🔢', label: btI18n.analytical || 'Analitik',  color: '#00d4ff' },
+    creative:   { icon: '🎨', label: btI18n.creative   || 'Yaratıcı',  color: '#7c3aed' },
+    empathetic: { icon: '💙', label: btI18n.empathetic || 'Empatik',   color: '#10b981' },
+    strategic:  { icon: '♟️', label: btI18n.strategic  || 'Stratejik', color: '#f59e0b' },
+  };
+  const normalizedBT = (user?.neuroProfile?.brainType || '').toLowerCase();
+  const bt = btLabels[normalizedBT];
 
   return (
     <MainLayout>
