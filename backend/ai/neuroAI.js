@@ -31,6 +31,30 @@ const BRAIN_TYPES = {
   },
 };
 
+const VALID_BRAIN_TYPES = ['analytical', 'creative', 'empathetic', 'strategic'];
+
+// Map any AI-returned value to one of the 4 valid brain types
+function normalizeBrainType(raw) {
+  if (!raw) return 'analytical';
+  const v = raw.toLowerCase().trim();
+  if (VALID_BRAIN_TYPES.includes(v)) return v;
+  // Common AI hallucinations mapped to closest type
+  const MAP = {
+    balanced: 'analytical', logical: 'analytical', rational: 'analytical', systematic: 'analytical',
+    technical: 'analytical', scientific: 'analytical', detail: 'analytical',
+    creative: 'creative', artistic: 'creative', intuitive: 'creative', innovative: 'creative',
+    visionary: 'creative', imaginative: 'creative', divergent: 'creative',
+    empathic: 'empathetic', emotional: 'empathetic', social: 'empathetic', compassionate: 'empathetic',
+    relational: 'empathetic', harmonious: 'empathetic', collaborative: 'empathetic',
+    strategic: 'strategic', leader: 'strategic', leadership: 'strategic', ambitious: 'strategic',
+    executive: 'strategic', planner: 'strategic', driven: 'strategic', goal: 'strategic',
+  };
+  for (const [key, mapped] of Object.entries(MAP)) {
+    if (v.includes(key)) return mapped;
+  }
+  return 'analytical'; // safe default
+}
+
 class NeuroAI {
   async analyze(type, data) {
     switch (type) {
@@ -59,7 +83,7 @@ ${formattedAnswers}
 
 Aşağıdaki JSON formatında analiz sonucu üret:
 {
-  "brainType": "analytical|creative|empathetic|strategic",
+  "brainType": "analytical veya creative veya empathetic veya strategic (SADECE bu 4 değerden birini yaz, başka hiçbir şey yazma)",
   "brainTypeDescription": "200-300 kelime detaylı açıklama",
   "energyRhythm": "morning|evening|flexible",
   "decisionStyle": "rational|intuitive|balanced",
@@ -77,6 +101,7 @@ Aşağıdaki JSON formatında analiz sonucu üret:
 }
 
 SADECE JSON döndür, başka metin ekleme.
+KRİTİK: brainType alanı SADECE şu 4 değerden biri olabilir: analytical, creative, empathetic, strategic — başka hiçbir değer KABUL EDİLMEZ.
     `;
 
     const ai = getOpenAI();
@@ -91,6 +116,8 @@ SADECE JSON döndür, başka metin ekleme.
 
       const result = JSON.parse(response.choices[0].message.content);
       result.rawResponse = response.choices[0].message.content;
+      // Force valid brain type — AI can return 'balanced', 'logical', etc.
+      result.brainType = normalizeBrainType(result.brainType);
       return result;
     } catch (error) {
       logger.error(`OpenAI analysis failed: ${error.message}`);

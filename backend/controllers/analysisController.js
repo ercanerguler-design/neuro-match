@@ -138,8 +138,10 @@ const processAnalysis = async (analysisId, userId, type, data) => {
       processingTime: Date.now() - startTime,
     });
 
-    // Update user's neuro profile (normalize brainType to lowercase)
-    const brainType = (aiResult.brainType || 'analytical').toLowerCase().trim();
+    // Update user's neuro profile — normalize AND validate brainType
+    const VALID_BT = ['analytical', 'creative', 'empathetic', 'strategic'];
+    const rawBT = (aiResult.brainType || 'analytical').toLowerCase().trim();
+    const brainType = VALID_BT.includes(rawBT) ? rawBT : 'analytical';
     await User.findByIdAndUpdate(userId, {
       neuroProfile: {
         brainType,
