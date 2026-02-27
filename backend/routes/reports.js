@@ -6,6 +6,16 @@ const ErrorResponse = require('../utils/errorResponse');
 const { protect } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
+// ── PUBLIC route — must be BEFORE router.use(protect) ────────────────────────
+router.get('/shared/:token', asyncHandler(async (req, res, next) => {
+  const report = await Report.findOne({ shareToken: req.params.token }).populate('user', 'name neuroProfile');
+  if (!report) return next(new ErrorResponse('Rapor bulunamadı veya linkin süresi dolmuş', 404));
+  report.downloadCount += 1;
+  await report.save();
+  res.status(200).json({ success: true, data: report });
+}));
+
+// ── Protected routes below ─────────────────────────────────────────────────
 router.use(protect);
 
 router.get('/', asyncHandler(async (req, res) => {
@@ -30,17 +40,9 @@ router.post('/:id/share', asyncHandler(async (req, res, next) => {
   await report.save();
   res.status(200).json({
     success: true,
-    shareUrl: `${process.env.CLIENT_URL}/shared-report/${report.shareToken}`,
+    shareToken: report.shareToken,
+    shareUrl: `https://www.x-neu.com/shared-report/${report.shareToken}`,
   });
-}));
-
-// Public shared report
-router.get('/shared/:token', asyncHandler(async (req, res, next) => {
-  const report = await Report.findOne({ shareToken: req.params.token });
-  if (!report) return next(new ErrorResponse('Rapor bulunamadı veya linkin süresi dolmuş', 404));
-  report.downloadCount += 1;
-  await report.save();
-  res.status(200).json({ success: true, data: report });
 }));
 
 module.exports = router;

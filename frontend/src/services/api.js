@@ -1,8 +1,16 @@
 import axios from 'axios';
 import useAuthStore from '../store/authStore';
 
+const BASE_URL = process.env.REACT_APP_API_URL || '/api/v1';
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || '/api/v1',
+  baseURL: BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// Public API — no auth token injected (for shared/public endpoints)
+export const publicApi = axios.create({
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -69,7 +77,7 @@ export const reportAPI = {
   getReports: () => api.get('/reports'),
   getReport: (id) => api.get(`/reports/${id}`),
   shareReport: (id) => api.post(`/reports/${id}/share`),
-  getShared: (token) => api.get(`/reports/shared/${token}`),
+  getShared: (token) => publicApi.get(`/reports/shared/${token}`),
 };
 
 // Coach

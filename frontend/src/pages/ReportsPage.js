@@ -2,155 +2,45 @@ import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import toast from 'react-hot-toast';
 import { reportAPI } from '../services/api';
+import { generatePDF } from '../utils/generatePDF';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
 import { useLanguage } from '../context/LanguageContext';
 
 const BRAIN_TYPE_ICONS = { analytical: '🔢', creative: '🎨', empathetic: '💙', strategic: '♟️' };
-const BRAIN_TYPE_LABELS = { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
-
-function generatePDF(report, user) {
-  import('jspdf').then(({ jsPDF }) => {
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const W = 210;
-    let y = 0;
-
-    doc.setFillColor(10, 10, 26);
-    doc.rect(0, 0, W, 297, 'F');
-    doc.setFillColor(0, 212, 255);
-    doc.rect(0, 0, W, 2, 'F');
-
-    y = 22;
-    doc.setTextColor(0, 212, 255);
-    doc.setFontSize(26);
-    doc.setFont('helvetica', 'bold');
-    doc.text('X-Neu', W / 2, y, { align: 'center' });
-
-    y += 10;
-    doc.setFontSize(11);
-    doc.setTextColor(148, 163, 184);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Nörolojik Profil Raporu', W / 2, y, { align: 'center' });
-
-    y += 8;
-    doc.setDrawColor(50, 50, 80);
-    doc.setLineWidth(0.3);
-    doc.line(20, y, W - 20, y);
-
-    y += 12;
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text(user?.name || 'Kullanıcı', 20, y);
-    y += 7;
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.setFont('helvetica', 'normal');
-    doc.text(report.title, 20, y);
-    doc.text(new Date(report.createdAt).toLocaleDateString('tr-TR'), W - 20, y, { align: 'right' });
-
-    y += 14;
-    doc.setFillColor(20, 20, 46);
-    doc.roundedRect(20, y, W - 40, 28, 4, 4, 'F');
-    doc.setDrawColor(0, 212, 255);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(20, y, W - 40, 28, 4, 4, 'S');
-    const bt = user?.neuroProfile?.brainType || 'analytical';
-    doc.setFontSize(13);
-    doc.setTextColor(0, 212, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Beyin Tipi: ${BRAIN_TYPE_LABELS[bt] || bt}`, 30, y + 11);
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.text(`Nöro Skoru: ${report.overallScore || '—'}/100`, 30, y + 21);
-    if (report.overallScore) {
-      const bx = 110, bw = 70, pct = (report.overallScore / 100) * bw;
-      doc.setFillColor(30, 30, 60);
-      doc.roundedRect(bx, y + 17, bw, 5, 2, 2, 'F');
-      doc.setFillColor(0, 212, 255);
-      doc.roundedRect(bx, y + 17, pct, 5, 2, 2, 'F');
-    }
-    y += 38;
-
-    if (report.summary) {
-      const lines = doc.splitTextToSize(report.summary, W - 48);
-      doc.setFillColor(16, 16, 40);
-      doc.roundedRect(20, y, W - 40, 10 + lines.length * 5.5, 3, 3, 'F');
-      doc.setTextColor(148, 163, 184);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(lines, 28, y + 8);
-      y += 16 + lines.length * 5.5;
-    }
-
-    (report.sections || []).forEach((section) => {
-      if (y > 255) {
-        doc.addPage();
-        doc.setFillColor(10, 10, 26);
-        doc.rect(0, 0, W, 297, 'F');
-        y = 20;
-      }
-      y += 4;
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(124, 58, 237);
-      doc.text(`${section.icon || '•'} ${section.title}`, 20, y);
-      y += 6;
-      if (section.content) {
-        const ls = doc.splitTextToSize(section.content, W - 44);
-        doc.setFontSize(9.5);
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(148, 163, 184);
-        doc.text(ls, 24, y);
-        y += ls.length * 5 + 4;
-      }
-      (section.recommendations || []).slice(0, 4).forEach((rec) => {
-        const rs = doc.splitTextToSize(`→  ${rec}`, W - 52);
-        doc.setFontSize(9);
-        doc.setTextColor(100, 116, 139);
-        doc.text(rs, 26, y);
-        y += rs.length * 4.5 + 2;
-      });
-    });
-
-    doc.setDrawColor(50, 50, 80);
-    doc.setLineWidth(0.3);
-    doc.line(20, 285, W - 20, 285);
-    doc.setFontSize(8.5);
-    doc.setTextColor(71, 85, 105);
-    doc.setFont('helvetica', 'normal');
-    doc.text('© 2026 X-Neu · SCE INNOVATION LTD. ŞTİ. · x-neu.com', W / 2, 291, { align: 'center' });
-    doc.setFillColor(124, 58, 237);
-    doc.rect(0, 295, W, 2, 'F');
-
-    doc.save(`x-neu-rapor-${Date.now()}.pdf`);
-    toast.success('📄 PDF rapor indirildi!');
-  }).catch(() => toast.error('PDF oluşturulamadı'));
-}
 
 export default function ReportsPage() {
   const { user } = useAuthStore();
   const [downloading, setDownloading] = useState(null);
+  const [sharing, setSharing] = useState(null);
   const { t, lang } = useLanguage();
 
   const { data: reports, isLoading } = useQuery('reports', reportAPI.getReports, {
     select: (res) => res.data.data,
   });
 
-  const handleShare = async (id) => {
+  const handleShare = async (report) => {
+    setSharing(report._id);
     try {
-      const res = await reportAPI.shareReport(id);
-      await navigator.clipboard.writeText(res.data.shareUrl);
-      toast.success((t.reports && t.reports.linkCopied) || 'Paylaşım linki kopyalandı!');
+      const res = await reportAPI.shareReport(report._id);
+      const url = res.data.shareUrl || `https://www.x-neu.com/shared-report/${res.data.shareToken}`;
+      await navigator.clipboard.writeText(url);
+      toast.success('🔗 Paylaşım bağlantısı kopyalandı!');
     } catch {
-      toast.error((t.reports && t.reports.copyFailed) || 'Link kopyalanamadı');
+      toast.error('Bağlantı kopyalanamadı');
+    } finally {
+      setSharing(null);
     }
   };
 
   const handlePDF = (report) => {
     setDownloading(report._id);
-    generatePDF(report, user);
-    setTimeout(() => setDownloading(null), 2000);
+    generatePDF(
+      report,
+      user,
+      () => { toast.success('📄 PDF indirildi!'); setDownloading(null); },
+      () => { toast.error('PDF oluşturulamadı'); setDownloading(null); }
+    );
   };
 
   return (
@@ -212,14 +102,15 @@ export default function ReportsPage() {
                     }
                   </button>
                   <button
-                    onClick={() => handleShare(report._id)}
+                    onClick={() => handleShare(report)}
+                    disabled={sharing === report._id}
                     style={{
                       padding: '9px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
-                      background: 'rgba(255,255,255,0.04)', color: '#94a3b8', cursor: 'pointer',
-                      fontSize: 13, fontWeight: 600,
+                      background: 'rgba(255,255,255,0.04)', color: '#94a3b8', cursor: sharing === report._id ? 'not-allowed' : 'pointer',
+                      fontSize: 13, fontWeight: 600, opacity: sharing === report._id ? 0.6 : 1,
                     }}
                   >
-                    🔗 {lang === 'en' ? 'Share' : 'Paylaş'}
+                    {sharing === report._id ? '⏳ Hazırlanıyor...' : (lang === 'en' ? '🔗 Share Link' : '🔗 Bağlantı Kopyala')}
                   </button>
                 </div>
               </div>

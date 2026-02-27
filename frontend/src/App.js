@@ -82,6 +82,7 @@ const CommunityPage = React.lazy(() => import('./pages/CommunityPage'));
 const PaymentPage = React.lazy(() => import('./pages/PaymentPage'));
 const PaymentSuccessPage = React.lazy(() => import('./pages/PaymentSuccessPage'));
 const PaymentFailedPage = React.lazy(() => import('./pages/PaymentFailedPage'));
+const SharedReportPage = React.lazy(() => import('./pages/SharedReportPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -177,6 +178,7 @@ export default function App() {
             <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
 
             {/* Payment */}
+            <Route path="/shared-report/:token" element={<SharedReportPage />} />
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/payment/success" element={<PaymentSuccessPage />} />
             <Route path="/payment/failed" element={<PaymentFailedPage />} />
