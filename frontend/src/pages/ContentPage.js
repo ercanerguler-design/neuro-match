@@ -86,7 +86,9 @@ export default function ContentPage() {
   const { user } = useAuthStore();
   const { t, lang } = useLanguage();
   const BRAIN_TABS = lang === 'en' ? BRAIN_TABS_EN : BRAIN_TABS_TR;
-  const myBrain = (user?.neuroProfile?.brainType || 'analytical').toLowerCase();
+  const VALID_BRAINS = ['analytical', 'creative', 'empathetic', 'strategic'];
+  const rawBrain = (user?.neuroProfile?.brainType || '').toLowerCase();
+  const myBrain = VALID_BRAINS.includes(rawBrain) ? rawBrain : 'analytical';
   const [activeTab, setActiveTab] = useState('mine');
   const [filter, setFilter] = useState('all');
   const [saved, setSaved] = useState([]);

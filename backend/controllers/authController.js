@@ -81,12 +81,24 @@ exports.login = asyncHandler(async (req, res, next) => {
 // @access  Private
 exports.getMe = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id);
-  // Auto-fix: normalize brainType to lowercase if it was saved capitalized (migration)
+  const VALID_BT = ['analytical', 'creative', 'empathetic', 'strategic'];
+  const BT_MAP = {
+    balanced: 'analytical', logical: 'analytical', rational: 'analytical', systematic: 'analytical',
+    technical: 'analytical', scientific: 'analytical',
+    artistic: 'creative', intuitive: 'creative', innovative: 'creative', visionary: 'creative', imaginative: 'creative',
+    empathic: 'empathetic', emotional: 'empathetic', social: 'empathetic', compassionate: 'empathetic', relational: 'empathetic',
+    leader: 'strategic', leadership: 'strategic', ambitious: 'strategic', executive: 'strategic', planner: 'strategic', driven: 'strategic',
+  };
   if (user?.neuroProfile?.brainType) {
-    const normalized = user.neuroProfile.brainType.toLowerCase();
-    if (normalized !== user.neuroProfile.brainType) {
-      await User.findByIdAndUpdate(req.user.id, { 'neuroProfile.brainType': normalized });
-      user.neuroProfile.brainType = normalized;
+    const raw = user.neuroProfile.brainType.toLowerCase();
+    let fixed = VALID_BT.includes(raw) ? raw : null;
+    if (!fixed) {
+      for (const [key, mapped] of Object.entries(BT_MAP)) { if (raw.includes(key)) { fixed = mapped; break; } }
+      fixed = fixed || 'analytical';
+    }
+    if (fixed !== user.neuroProfile.brainType) {
+      await User.findByIdAndUpdate(req.user.id, { 'neuroProfile.brainType': fixed });
+      user.neuroProfile.brainType = fixed;
     }
   }
   res.status(200).json({ success: true, data: user });

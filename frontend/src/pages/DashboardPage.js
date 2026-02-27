@@ -85,13 +85,15 @@ export default function DashboardPage() {
   );
 
   // Derive brainType from each source independently (avoid truthy empty-object {} trap from Mongoose)
-  const dashBT = (dashboard?.neuroProfile?.brainType || '').toLowerCase();
-  const storeBT = (user?.neuroProfile?.brainType || '').toLowerCase();
+  const VALID_BT = ['analytical', 'creative', 'empathetic', 'strategic'];
+  const dashBTRaw = (dashboard?.neuroProfile?.brainType || '').toLowerCase();
+  const storeBTRaw = (user?.neuroProfile?.brainType || '').toLowerCase();
+  const dashBT = VALID_BT.includes(dashBTRaw) ? dashBTRaw : '';
+  const storeBT = VALID_BT.includes(storeBTRaw) ? storeBTRaw : '';
   const liveBrainType = dashBT || storeBT;
   const liveNeuroProfile = liveBrainType
     ? (dashBT ? dashboard.neuroProfile : user?.neuroProfile)
     : (dashboard?.neuroProfile || user?.neuroProfile);
-
   // Always refresh /auth/me on mount to sync latest brainType into store
   useEffect(() => {
     authAPI.getMe().then((res) => {
