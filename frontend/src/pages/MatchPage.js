@@ -5,21 +5,6 @@ import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
 import { useLanguage } from '../context/LanguageContext';
 
-const MATCH_TYPES = [
-  { value: 'professional', label: 'İş Ortağı', icon: '💼', desc: 'En uyumlu iş ortağını bul' },
-  { value: 'startup', label: 'Startup Kurucu', icon: '🚀', desc: 'Tamamlayıcı kurucu bul' },
-  { value: 'romantic', label: 'Romantik', icon: '💑', desc: 'Beyin uyumluluğuna göre partner' },
-  { value: 'friendship', label: 'Arkadaşlık', icon: '🤝', desc: 'Derin arkadaşlık uyumu' },
-  { value: 'personal', label: 'Kişisel', icon: '👥', desc: 'Genel uyumluluk analizi' },
-];
-
-const CO_FOUNDER_ROLES = {
-  analytical: { idealRole: 'CTO / Ürün', pairs: ['creative', 'strategic'], tip: 'Sistemi sen kur, yaratıcı ortak vizyonu genişletsin.' },
-  creative: { idealRole: 'CPO / Tasarım', pairs: ['analytical', 'strategic'], tip: 'Ürünü sen şekillendir, analitik ortak tekniği yönetsin.' },
-  empathetic: { idealRole: 'COO / Müşteri', pairs: ['strategic', 'analytical'], tip: 'İnsan odaklı büyüme için stratejik kurucu gerekli.' },
-  strategic: { idealRole: 'CEO / Büyüme', pairs: ['analytical', 'creative'], tip: 'Şirketi sen yönet, yaratıcı ürünü, analitik tekniği geliştirsin.' },
-};
-
 export default function MatchPage() {
   const [selectedType, setSelectedType] = useState('professional');
   const { user } = useAuthStore();

@@ -33,7 +33,8 @@ export default function CoachPage() {
     utt.onend = () => setSpeaking(false);
     utt.onerror = () => setSpeaking(false);
     window.speechSynthesis.speak(utt);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   const stopSpeaking = () => {
     window.speechSynthesis?.cancel();

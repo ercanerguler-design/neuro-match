@@ -7,13 +7,6 @@ import useAuthStore from '../store/authStore';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from 'recharts';
 import { useLanguage } from '../context/LanguageContext';
 
-const BRAIN_TYPE_INFO = {
-  analytical: { icon: '🔢', label: 'Analitik', color: '#00d4ff', bg: 'rgba(0,212,255,0.1)', desc: 'Veri odaklı, sistematik düşünür, detaylara dikkat eder.' },
-  creative: { icon: '🎨', label: 'Yaratıcı', color: '#7c3aed', bg: 'rgba(124,58,237,0.1)', desc: 'Yenilikçi, sezgisel, büyük resmi görür.' },
-  empathetic: { icon: '💙', label: 'Empatik', color: '#10b981', bg: 'rgba(16,185,129,0.1)', desc: 'İnsan odaklı, duygusal zeka yüksek.' },
-  strategic: { icon: '♟️', label: 'Stratejik', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', desc: 'Uzun vadeli düşünür, liderlik doğal.' },
-};
-
 export default function ResultsPage() {
   const { id } = useParams();
   const [dots, setDots] = useState('.');

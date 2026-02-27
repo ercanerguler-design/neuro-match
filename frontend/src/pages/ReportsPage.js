@@ -132,7 +132,6 @@ export default function ReportsPage() {
   const { user } = useAuthStore();
   const [downloading, setDownloading] = useState(null);
   const { t, lang } = useLanguage();
-  const BRAIN_TYPE_LABELS = (t.match && t.match.brainLabels) || { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
 
   const { data: reports, isLoading } = useQuery('reports', reportAPI.getReports, {
     select: (res) => res.data.data,
