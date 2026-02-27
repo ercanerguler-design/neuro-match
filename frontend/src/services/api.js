@@ -91,6 +91,11 @@ export const enterpriseAPI = {
   getDashboard: () => api.get('/enterprise/dashboard'),
   getHRInsights: () => api.get('/enterprise/hr-insights'),
   teamAnalysis: (teamMemberIds) => api.post('/enterprise/team-analysis', { teamMemberIds }),
+  // Member management
+  searchMember: (email) => api.post('/enterprise/members/search', { email }),
+  addMember: (userId) => api.post('/enterprise/members/add', { userId }),
+  removeMember: (userId) => api.delete(`/enterprise/members/${userId}`),
+  getMembers: () => api.get('/enterprise/members'),
 };
 
 // Admin

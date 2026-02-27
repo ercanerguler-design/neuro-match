@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell, ResponsiveContainer, ReferenceLine } from 'recharts';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
-import { enterpriseAPI, adminAPI } from '../services/api';
+import { enterpriseAPI } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 
 const FEATURE_ICONS = ['👥', '🔥', '🎯', '📊', '🤖', '🔒'];
@@ -18,13 +18,19 @@ export default function EnterprisePage() {
   // ── Enterprise Dashboard (for enterprise/admin users) ─────────────────────
   const EnterpriseDashboard = () => {
     const navigate = useNavigate();
+    const qc = useQueryClient();
     const [actionModal, setActionModal] = useState(null); // 'analysis' | 'addMember' | null
-    const [addMemberForm, setAddMemberForm] = useState({ name: '', email: '', password: '' });
     const [analysisData, setAnalysisData] = useState(null);
     const [actionLoading, setActionLoading] = useState(false);
+    const [searchEmail, setSearchEmail] = useState('');
+    const [searchResult, setSearchResult] = useState(null);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [searchError, setSearchError] = useState('');
 
     const { data: dashData, isLoading: dashLoading } = useQuery('enterpriseDashboard', () => enterpriseAPI.getDashboard(), { staleTime: 60000 });
     const { data: hrData } = useQuery('hrInsights', () => enterpriseAPI.getHRInsights(), { staleTime: 60000 });
+    const { data: membersData } = useQuery('enterpriseMembers', () => enterpriseAPI.getMembers(), { staleTime: 30000, select: (res) => res.data?.data || [] });
+    const members = membersData || [];
 
     const dash = dashData?.data?.data || {};
     const hr = hrData?.data?.data || {};
@@ -64,19 +70,39 @@ export default function EnterprisePage() {
       toast.success(lang === 'tr' ? 'Rapor indirildi!' : 'Report downloaded!');
     };
 
-    const handleAddMember = async (e) => {
+    const handleSearchMember = async (e) => {
       e.preventDefault();
+      setSearchLoading(true); setSearchError(''); setSearchResult(null);
+      try {
+        const res = await enterpriseAPI.searchMember(searchEmail);
+        setSearchResult(res.data?.data);
+      } catch (err) {
+        setSearchError(err?.response?.data?.message || (lang === 'tr' ? 'Kullanıcı bulunamadı' : 'User not found'));
+      } finally { setSearchLoading(false); }
+    };
+
+    const handleAddMember = async (userId) => {
       setActionLoading(true);
       try {
-        await adminAPI.createUser({ ...addMemberForm, role: 'user', subscription: { plan: 'enterprise' } });
-        toast.success(lang === 'tr' ? 'Üye başarıyla eklendi!' : 'Member added successfully!');
-        setActionModal(null);
-        setAddMemberForm({ name: '', email: '', password: '' });
+        await enterpriseAPI.addMember(userId);
+        toast.success(lang === 'tr' ? 'Üye panelinize eklendi!' : 'Member added to your panel!');
+        setSearchResult(null); setSearchEmail('');
+        qc.invalidateQueries('enterpriseMembers');
+        qc.invalidateQueries('enterpriseDashboard');
       } catch (err) {
         toast.error(err?.response?.data?.message || (lang === 'tr' ? 'Üye eklenemedi' : 'Failed to add member'));
-      } finally {
-        setActionLoading(false);
-      }
+      } finally { setActionLoading(false); }
+    };
+
+    const handleRemoveMember = async (userId, name) => {
+      setActionLoading(true);
+      try {
+        await enterpriseAPI.removeMember(userId);
+        toast.success(lang === 'tr' ? `${name} panelden kaldırıldı` : `${name} removed from panel`);
+        qc.invalidateQueries('enterpriseMembers');
+        qc.invalidateQueries('enterpriseDashboard');
+      } catch { toast.error(lang === 'tr' ? 'Kaldırma işlemi başarısız' : 'Remove failed'); }
+      finally { setActionLoading(false); }
     };
 
     const brainColors = { analytical: '#00d4ff', creative: '#7c3aed', empathetic: '#10b981', strategic: '#f59e0b' };
@@ -310,37 +336,83 @@ export default function EnterprisePage() {
 
           {/* Add Member Modal */}
           {actionModal === 'addMember' && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setActionModal(null)}>
-              <div className="card" style={{ maxWidth: 400, width: '90%' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => { setActionModal(null); setSearchResult(null); setSearchEmail(''); setSearchError(''); }}>
+              <div className="card" style={{ maxWidth: 440, width: '90%' }} onClick={(e) => e.stopPropagation()}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                  <h3 style={{ fontWeight: 700 }}>{lang === 'tr' ? '👤 Üye Ekle' : '👤 Add Member'}</h3>
-                  <button onClick={() => setActionModal(null)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 20 }}>✕</button>
+                  <h3 style={{ fontWeight: 700 }}>{lang === 'tr' ? '👤 E-posta ile Üye Ekle' : '👤 Add Member by Email'}</h3>
+                  <button onClick={() => { setActionModal(null); setSearchResult(null); setSearchEmail(''); setSearchError(''); }} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 20 }}>✕</button>
                 </div>
-                <form onSubmit={handleAddMember}>
-                  {[
-                    { key: 'name', label: lang === 'tr' ? 'Ad Soyad' : 'Full Name', type: 'text', placeholder: 'John Doe' },
-                    { key: 'email', label: 'E-posta', type: 'email', placeholder: 'john@company.com' },
-                    { key: 'password', label: lang === 'tr' ? 'Şifre' : 'Password', type: 'password', placeholder: '••••••••' },
-                  ].map((field) => (
-                    <div key={field.key} style={{ marginBottom: 14 }}>
-                      <label style={{ fontSize: 13, color: '#94a3b8', marginBottom: 6, display: 'block' }}>{field.label}</label>
-                      <input
-                        type={field.type}
-                        placeholder={field.placeholder}
-                        value={addMemberForm[field.key]}
-                        onChange={(e) => setAddMemberForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                        required
-                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', color: '#e2e8f0', fontSize: 14, boxSizing: 'border-box', outline: 'none' }}
-                      />
-                    </div>
-                  ))}
-                  <button
-                    type="submit"
-                    disabled={actionLoading}
-                    style={{ width: '100%', background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', border: 'none', borderRadius: 8, padding: '12px', color: '#fff', fontWeight: 700, fontSize: 15, cursor: actionLoading ? 'not-allowed' : 'pointer', marginTop: 4, opacity: actionLoading ? 0.7 : 1 }}>
-                    {actionLoading ? (lang === 'tr' ? 'Ekleniyor...' : 'Adding...') : (lang === 'tr' ? 'Üye Ekle' : 'Add Member')}
-                  </button>
+                <form onSubmit={handleSearchMember} style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 13, color: '#94a3b8', marginBottom: 6, display: 'block' }}>E-posta</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="email"
+                      placeholder="kullanici@firma.com"
+                      value={searchEmail}
+                      onChange={(e) => setSearchEmail(e.target.value)}
+                      required
+                      style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 12px', color: '#e2e8f0', fontSize: 14, outline: 'none' }}
+                    />
+                    <button type="submit" disabled={searchLoading} style={{ background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', border: 'none', borderRadius: 8, padding: '10px 18px', color: '#fff', fontWeight: 700, fontSize: 14, cursor: searchLoading ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', opacity: searchLoading ? 0.7 : 1 }}>
+                      {searchLoading ? '...' : (lang === 'tr' ? 'Ara' : 'Search')}
+                    </button>
+                  </div>
                 </form>
+                {searchError && <div style={{ color: '#f87171', fontSize: 13, marginBottom: 12 }}>⚠️ {searchError}</div>}
+                {searchResult && (
+                  <div style={{ padding: 16, borderRadius: 10, background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.2)', marginBottom: 16 }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{searchResult.name}</div>
+                    <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 8 }}>{searchResult.email}</div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                      {searchResult.brainType && (
+                        <span style={{ background: 'rgba(0,212,255,0.12)', border: '1px solid rgba(0,212,255,0.3)', borderRadius: 6, padding: '3px 10px', fontSize: 12, color: '#00d4ff', fontWeight: 600 }}>🧠 {searchResult.brainType}</span>
+                      )}
+                      {searchResult.overallScore > 0 && (
+                        <span style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 6, padding: '3px 10px', fontSize: 12, color: '#10b981', fontWeight: 600 }}>⭐ {searchResult.overallScore}</span>
+                      )}
+                    </div>
+                    <button onClick={() => handleAddMember(searchResult._id)} disabled={actionLoading} style={{ width: '100%', background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', border: 'none', borderRadius: 8, padding: '10px', color: '#fff', fontWeight: 700, fontSize: 14, cursor: actionLoading ? 'not-allowed' : 'pointer', opacity: actionLoading ? 0.7 : 1 }}>
+                      {actionLoading ? (lang === 'tr' ? 'Ekleniyor...' : 'Adding...') : (lang === 'tr' ? '✅ Panele Ekle' : '✅ Add to Panel')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Members List */}
+          {members.length > 0 && (
+            <div className="card" style={{ marginTop: 28 }}>
+              <h3 style={{ fontWeight: 700, marginBottom: 18, fontSize: 17 }}>👥 {lang === 'tr' ? 'Panel Üyeleri' : 'Panel Members'} <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: 14 }}>({members.length})</span></h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {members.map((m) => (
+                  <div key={m._id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 120 }}>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{m.name}</div>
+                      <div style={{ fontSize: 12, color: '#64748b' }}>{m.email}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      {m.brainType && (
+                        <span style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.25)', borderRadius: 6, padding: '3px 9px', fontSize: 11, color: '#00d4ff', fontWeight: 600 }}>🧠 {m.brainType}</span>
+                      )}
+                      {m.neuroScore > 0 && (
+                        <span style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 6, padding: '3px 9px', fontSize: 11, color: '#10b981', fontWeight: 600 }}>⭐ {m.neuroScore}</span>
+                      )}
+                      {m.avgMood > 0 && (
+                        <span style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 6, padding: '3px 9px', fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>😊 {m.avgMood}/10</span>
+                      )}
+                      {m.avgStress > 0 && (
+                        <span style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 6, padding: '3px 9px', fontSize: 11, color: '#ef4444', fontWeight: 600 }}>😓 {m.avgStress}/10</span>
+                      )}
+                      {m.checkinCount > 0 && (
+                        <span style={{ fontSize: 11, color: '#64748b' }}>📅 {m.checkinCount} check-in</span>
+                      )}
+                    </div>
+                    <button onClick={() => handleRemoveMember(m._id, m.name)} disabled={actionLoading} style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, padding: '6px 12px', color: '#ef4444', fontSize: 12, cursor: actionLoading ? 'not-allowed' : 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      {lang === 'tr' ? 'Kaldır' : 'Remove'}
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           )}

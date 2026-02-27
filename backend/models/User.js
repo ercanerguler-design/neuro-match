@@ -91,6 +91,10 @@ const UserSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
     createdAt: { type: Date, default: Date.now },
+
+    // Enterprise linkage
+    enterpriseId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }, // which enterprise this user belongs to
+    enterpriseMembers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // enterprise user's member list
   },
   { timestamps: true }
 );
