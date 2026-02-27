@@ -51,23 +51,42 @@ export default function EnterprisePage() {
       }
     };
 
-    const handleDownloadReport = () => {
-      const report = {
-        generatedAt: new Date().toISOString(),
-        teamCompatibility: `%${dash.teamCompatibility ?? 87}`,
-        burnoutRisk: `%${dash.burnoutRisk ?? 23}`,
-        productivityScore: dash.productivityScore ?? 91,
-        brainDistribution: brainBalance,
-        teamSize: total,
-      };
-      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const handleDownloadPersonnel = () => {
+      if (members.length === 0) {
+        toast.error(lang === 'tr' ? 'Panelde henüz üye yok' : 'No members in panel yet');
+        return;
+      }
+      const headers = lang === 'tr'
+        ? ['Ad Soyad', 'E-posta', 'Beyin Tipi', 'Nöro Skoru', 'Ort. Ruh Hali (1-10)', 'Ort. Stres (1-10)', 'Burnout Riski (%)', 'Check-in Sayısı', 'Analiz Durumu']
+        : ['Full Name', 'Email', 'Brain Type', 'Neuro Score', 'Avg Mood (1-10)', 'Avg Stress (1-10)', 'Burnout Risk (%)', 'Check-in Count', 'Analysis Status'];
+      const rows = members.map((m) => {
+        const burnout = m.avgStress > 0
+          ? Math.min(100, Math.round(m.avgStress * 10))
+          : (m.avgMood > 0 ? Math.max(0, Math.round((10 - m.avgMood) * 9)) : '-');
+        const analysisStatus = m.brainType
+          ? (lang === 'tr' ? 'Tamamlandı' : 'Completed')
+          : (lang === 'tr' ? 'Bekleniyor' : 'Pending');
+        return [
+          m.name || '-',
+          m.email || '-',
+          m.brainType || (lang === 'tr' ? 'Belirlenmedi' : 'Not Set'),
+          m.neuroScore ?? '-',
+          m.avgMood ? Number(m.avgMood).toFixed(1) : '-',
+          m.avgStress ? Number(m.avgStress).toFixed(1) : '-',
+          burnout,
+          m.checkinCount ?? 0,
+          analysisStatus,
+        ];
+      });
+      const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `x-neu-report-${Date.now()}.json`;
+      a.download = `x-neu-personel-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success(lang === 'tr' ? 'Rapor indirildi!' : 'Report downloaded!');
+      toast.success(lang === 'tr' ? 'Personel raporu indirildi!' : 'Personnel report downloaded!');
     };
 
     const handleSearchMember = async (e) => {
@@ -106,6 +125,7 @@ export default function EnterprisePage() {
     };
 
     const brainColors = { analytical: '#00d4ff', creative: '#7c3aed', empathetic: '#10b981', strategic: '#f59e0b' };
+    const leastNeeded = Object.entries(brainBalance).sort((a, b) => a[1] - b[1])[0]?.[0] || 'creative';
     const brainLabels = {
       analytical: { tr: 'Analitik', en: 'Analytical' },
       creative: { tr: 'Yaratıcı', en: 'Creative' },
@@ -224,16 +244,24 @@ export default function EnterprisePage() {
               </div>
             </div>
             {(() => {
-              const members = hr.teamMembers || [
-                { name: lang === 'tr' ? 'Ayşe K.' : 'Alice K.', burnoutRisk: 18, brainType: 'analytical' },
-                { name: lang === 'tr' ? 'Mehmet S.' : 'Michael S.', burnoutRisk: 67, brainType: 'creative' },
-                { name: lang === 'tr' ? 'Zeynep A.' : 'Zoe A.', burnoutRisk: 42, brainType: 'empathetic' },
-                { name: lang === 'tr' ? 'Can T.' : 'Carl T.', burnoutRisk: 25, brainType: 'strategic' },
-                { name: lang === 'tr' ? 'Fatma B.' : 'Fiona B.', burnoutRisk: 78, brainType: 'empathetic' },
-                { name: lang === 'tr' ? 'Ali R.' : 'Alex R.', burnoutRisk: 35, brainType: 'analytical' },
-                { name: lang === 'tr' ? 'Selin M.' : 'Sara M.', burnoutRisk: 54, brainType: 'creative' },
-                { name: lang === 'tr' ? 'Burak Y.' : 'Brian Y.', burnoutRisk: 12, brainType: 'strategic' },
-              ];
+              const burnoutTeam = members.length > 0
+                ? members.map((m) => ({
+                    name: (m.name || '').split(' ').slice(0, 2).join(' '),
+                    burnoutRisk: m.avgStress > 0
+                      ? Math.min(100, Math.round(m.avgStress * 10))
+                      : (m.avgMood > 0 ? Math.max(0, Math.round((10 - m.avgMood) * 9)) : 0),
+                    brainType: m.brainType || (lang === 'tr' ? 'bilinmiyor' : 'unknown'),
+                  }))
+                : (hr.teamMembers || [
+                    { name: lang === 'tr' ? 'Ayşe K.' : 'Alice K.', burnoutRisk: 18, brainType: 'analytical' },
+                    { name: lang === 'tr' ? 'Mehmet S.' : 'Michael S.', burnoutRisk: 67, brainType: 'creative' },
+                    { name: lang === 'tr' ? 'Zeynep A.' : 'Zoe A.', burnoutRisk: 42, brainType: 'empathetic' },
+                    { name: lang === 'tr' ? 'Can T.' : 'Carl T.', burnoutRisk: 25, brainType: 'strategic' },
+                    { name: lang === 'tr' ? 'Fatma B.' : 'Fiona B.', burnoutRisk: 78, brainType: 'empathetic' },
+                    { name: lang === 'tr' ? 'Ali R.' : 'Alex R.', burnoutRisk: 35, brainType: 'analytical' },
+                    { name: lang === 'tr' ? 'Selin M.' : 'Sara M.', burnoutRisk: 54, brainType: 'creative' },
+                    { name: lang === 'tr' ? 'Burak Y.' : 'Brian Y.', burnoutRisk: 12, brainType: 'strategic' },
+                  ]);
               const getBarColor = (risk) => risk < 30 ? '#10b981' : risk < 60 ? '#f59e0b' : '#ef4444';
               const CustomTooltip = ({ active, payload }) => {
                 if (!active || !payload?.length) return null;
@@ -247,18 +275,18 @@ export default function EnterprisePage() {
                   </div>
                 );
               };
-              const highRisk = members.filter((m) => m.burnoutRisk >= 60);
+              const highRisk = burnoutTeam.filter((m) => m.burnoutRisk >= 60);
               return (
                 <>
                   <ResponsiveContainer width="100%" height={220}>
-                    <BarChart data={members} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                    <BarChart data={burnoutTeam} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                       <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 12 }} />
                       <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={(v) => `%${v}`} />
                       <Tooltip content={<CustomTooltip />} />
                       <ReferenceLine y={30} stroke="#10b981" strokeDasharray="4 2" strokeOpacity={0.4} />
                       <ReferenceLine y={60} stroke="#f59e0b" strokeDasharray="4 2" strokeOpacity={0.4} />
                       <Bar dataKey="burnoutRisk" radius={[4, 4, 0, 0]}>
-                        {members.map((entry, index) => (
+                        {burnoutTeam.map((entry, index) => (
                           <Cell key={index} fill={getBarColor(entry.burnoutRisk)} />
                         ))}
                       </Bar>
@@ -290,8 +318,8 @@ export default function EnterprisePage() {
               {[
                 { label: lang === 'tr' ? '📊 Ekip Analizi' : '📊 Team Analysis', onClick: handleTeamAnalysis },
                 { label: lang === 'tr' ? '👤 Üye Ekle' : '👤 Add Member', onClick: () => setActionModal('addMember') },
-                { label: lang === 'tr' ? '📈 Rapor İndir' : '📈 Download Report', onClick: handleDownloadReport },
-                { label: lang === 'tr' ? '🎯 İşe Alım Modu' : '🎯 Hiring Mode', onClick: () => navigate('/match') },
+                { label: lang === 'tr' ? '� Personel Raporu' : '📋 Personnel Report', onClick: handleDownloadPersonnel },
+                { label: lang === 'tr' ? '🎯 İşe Alım Modu' : '🎯 Hiring Mode', onClick: () => setActionModal('hiring') },
               ].map((action) => (
                 <button
                   key={action.label}
@@ -330,6 +358,71 @@ export default function EnterprisePage() {
                     ✅ {r}
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Hiring Mode Modal */}
+          {actionModal === 'hiring' && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }} onClick={() => setActionModal(null)}>
+              <div className="card" style={{ maxWidth: 560, width: '90%', maxHeight: '85vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <h3 style={{ fontWeight: 700 }}>{lang === 'tr' ? '🎯 İşe Alım Modu' : '🎯 Hiring Mode'}</h3>
+                  <button onClick={() => setActionModal(null)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 20 }}>✕</button>
+                </div>
+                <div style={{ marginBottom: 20 }}>
+                  <h4 style={{ fontSize: 14, fontWeight: 600, color: '#94a3b8', marginBottom: 14 }}>{lang === 'tr' ? '📊 Mevcut Ekip Dağılımı' : '📊 Current Team Distribution'}</h4>
+                  {Object.entries(brainBalance).map(([type, count]) => {
+                    const pct = Math.round((count / total) * 100);
+                    const needed = type === leastNeeded;
+                    return (
+                      <div key={type} style={{ marginBottom: 12 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 13 }}>
+                          <span style={{ color: brainColors[type], fontWeight: 600 }}>{brainLabels[type]?.[lang]}</span>
+                          <span style={{ color: needed ? '#f59e0b' : '#94a3b8', fontWeight: needed ? 700 : 400 }}>
+                            {pct}% {needed && (lang === 'tr' ? '← Eksik' : '← Needed')}
+                          </span>
+                        </div>
+                        <div style={{ height: 8, borderRadius: 4, background: 'rgba(255,255,255,0.06)' }}>
+                          <div style={{ height: '100%', borderRadius: 4, width: `${pct}%`, background: needed ? `linear-gradient(90deg, #f59e0b, ${brainColors[type]})` : brainColors[type], transition: 'width 0.8s ease' }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ padding: 16, borderRadius: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', marginBottom: 20 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', marginBottom: 8 }}>
+                    💡 {lang === 'tr' ? 'Öncelikli İşe Alım Önerisi' : 'Priority Hiring Recommendation'}
+                  </div>
+                  <div style={{ fontSize: 14, color: '#e2e8f0', lineHeight: 1.6 }}>
+                    {lang === 'tr'
+                      ? `Ekibiniz en çok ${brainLabels[leastNeeded]?.tr} beyin tipine ihtiyaç duyuyor. Bu profile sahip adaylar ekip dengesini güçlendirecek ve üretkenliği artıracak.`
+                      : `Your team needs more ${brainLabels[leastNeeded]?.en} profiles. Candidates with this brain type will strengthen team balance and boost productivity.`}
+                  </div>
+                </div>
+                <h4 style={{ fontSize: 14, fontWeight: 600, color: '#94a3b8', marginBottom: 12 }}>
+                  {lang === 'tr' ? '🏆 Beyin Tipine Göre Uygun Roller' : '🏆 Suitable Roles by Brain Type'}
+                </h4>
+                {[
+                  { type: 'analytical', roles: { tr: 'Veri Analisti · Yazılım Mühendisi · Finans Uzmanı', en: 'Data Analyst · Software Engineer · Finance Specialist' } },
+                  { type: 'creative', roles: { tr: 'UI/UX Tasarımcı · Pazarlama Uzmanı · İnovasyon Lideri', en: 'UI/UX Designer · Marketing Specialist · Innovation Lead' } },
+                  { type: 'empathetic', roles: { tr: 'İK Uzmanı · Müşteri Deneyimi · Takım Koçu', en: 'HR Specialist · Customer Experience · Team Coach' } },
+                  { type: 'strategic', roles: { tr: 'Proje Yöneticisi · İş Geliştirme · Operasyon Direktörü', en: 'Project Manager · Business Development · Operations Director' } },
+                ].map(({ type, roles }) => (
+                  <div key={type} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 14px', borderRadius: 8, marginBottom: 8, background: type === leastNeeded ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.02)', border: `1px solid ${type === leastNeeded ? 'rgba(245,158,11,0.25)' : 'rgba(255,255,255,0.06)'}` }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: brainColors[type], marginTop: 3, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: brainColors[type], marginBottom: 3 }}>{brainLabels[type]?.[lang]}</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8' }}>{roles[lang]}</div>
+                    </div>
+                    {type === leastNeeded && <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700, whiteSpace: 'nowrap' }}>★ {lang === 'tr' ? 'ÖNCELİKLİ' : 'PRIORITY'}</span>}
+                  </div>
+                ))}
+                <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 8, background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.15)', fontSize: 13, color: '#94a3b8', lineHeight: 1.6 }}>
+                  💡 {lang === 'tr'
+                    ? 'Aday değerlendirme sürecinde X-Neu analiz raporlarını paylaşarak aday-ekip uyumunu ölçebilirsiniz.'
+                    : 'Share X-Neu analysis reports during candidate evaluation to measure candidate-team compatibility.'}
+                </div>
               </div>
             </div>
           )}
