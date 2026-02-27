@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { reportAPI } from '../services/api';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
+import { useLanguage } from '../context/LanguageContext';
 
 const BRAIN_TYPE_ICONS = { analytical: '🔢', creative: '🎨', empathetic: '💙', strategic: '♟️' };
 const BRAIN_TYPE_LABELS = { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
@@ -130,6 +131,8 @@ function generatePDF(report, user) {
 export default function ReportsPage() {
   const { user } = useAuthStore();
   const [downloading, setDownloading] = useState(null);
+  const { t, lang } = useLanguage();
+  const BRAIN_TYPE_LABELS = (t.match && t.match.brainLabels) || { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
 
   const { data: reports, isLoading } = useQuery('reports', reportAPI.getReports, {
     select: (res) => res.data.data,
@@ -139,9 +142,9 @@ export default function ReportsPage() {
     try {
       const res = await reportAPI.shareReport(id);
       await navigator.clipboard.writeText(res.data.shareUrl);
-      toast.success('Paylaşım linki kopyalandı!');
+      toast.success((t.reports && t.reports.linkCopied) || 'Paylaşım linki kopyalandı!');
     } catch {
-      toast.error('Link kopyalanamadı');
+      toast.error((t.reports && t.reports.copyFailed) || 'Link kopyalanamadı');
     }
   };
 
@@ -156,8 +159,8 @@ export default function ReportsPage() {
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         <div style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>📊 Raporlarım</h1>
-            <p style={{ color: '#94a3b8' }}>Tüm nörolojik analizlerin — PDF olarak indirilebilir</p>
+            <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>📊 {(t.reports && t.reports.title) || 'Raporlarım'}</h1>
+            <p style={{ color: '#94a3b8' }}>{(t.reports && t.reports.subtitleFull) || 'Tüm nörolojik analizlerin — PDF olarak indirilebilir'}</p>
           </div>
         </div>
 
@@ -168,9 +171,9 @@ export default function ReportsPage() {
         ) : !reports?.length ? (
           <div className="card" style={{ textAlign: 'center', padding: 64 }}>
             <div style={{ fontSize: 64, marginBottom: 16 }}>📋</div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>Henüz rapor yok</h2>
-            <p style={{ color: '#94a3b8', marginBottom: 24 }}>İlk analizini tamamla ve raporunu oluştur.</p>
-            <a href="/analysis" className="btn btn-primary">🧠 Analiz Başlat</a>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>{lang === 'en' ? 'No reports yet' : 'Henüz rapor yok'}</h2>
+            <p style={{ color: '#94a3b8', marginBottom: 24 }}>{(t.reports && t.reports.startAnalysis) || 'İlk analizini tamamla ve raporunu oluştur.'}</p>
+            <a href="/analysis" className="btn btn-primary">🧠 {lang === 'en' ? 'Start Analysis' : 'Analiz Başlat'}</a>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -186,8 +189,8 @@ export default function ReportsPage() {
                     {(report.summary || '').slice(0, 150)}{(report.summary || '').length > 150 ? '...' : ''}
                   </p>
                   <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#64748b', flexWrap: 'wrap' }}>
-                    <span>📅 {new Date(report.createdAt).toLocaleDateString('tr-TR')}</span>
-                    <span>📥 {report.downloadCount || 0} indirme</span>
+                    <span>📅 {new Date(report.createdAt).toLocaleDateString(lang === 'en' ? 'en-US' : 'tr-TR')}</span>
+                    <span>📮 {report.downloadCount || 0} {(t.reports && t.reports.downloads) || 'indirme'}</span>
                     {report.overallScore && (
                       <span style={{ color: '#10b981', fontWeight: 700 }}>⚡ {report.overallScore}/100</span>
                     )}
@@ -205,8 +208,8 @@ export default function ReportsPage() {
                     }}
                   >
                     {downloading === report._id
-                      ? <><div className="loading-spinner" style={{ width: 12, height: 12 }} /> Hazırlanıyor...</>
-                      : '📄 PDF İndir'
+                      ? <><div className="loading-spinner" style={{ width: 12, height: 12 }} /> {(t.reports && t.reports.preparing) || 'Hazırlanıyor...'}</>
+                      : (t.reports && t.reports.downloadPDF) || '📄 PDF İndir'
                     }
                   </button>
                   <button
@@ -217,7 +220,7 @@ export default function ReportsPage() {
                       fontSize: 13, fontWeight: 600,
                     }}
                   >
-                    🔗 Paylaş
+                    🔗 {lang === 'en' ? 'Share' : 'Paylaş'}
                   </button>
                 </div>
               </div>

@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { coachAPI } from '../services/api';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function CoachPage() {
   const [messages, setMessages] = useState([]);
@@ -13,18 +14,21 @@ export default function CoachPage() {
   const [speaking, setSpeaking] = useState(false);
   const messagesEndRef = useRef(null);
   const { user } = useAuthStore();
+  const { t, lang } = useLanguage();
 
   const speak = useCallback((text) => {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/[#*_`]/g, '');
     const utt = new SpeechSynthesisUtterance(clean);
-    utt.lang = 'tr-TR';
+    utt.lang = lang === 'en' ? 'en-US' : 'tr-TR';
     utt.rate = 0.95;
     utt.pitch = 1.05;
     const voices = window.speechSynthesis.getVoices();
-    const trVoice = voices.find((v) => v.lang.startsWith('tr'));
-    if (trVoice) utt.voice = trVoice;
+    const selectedVoice = lang === 'en'
+      ? voices.find((v) => v.lang.startsWith('en'))
+      : voices.find((v) => v.lang.startsWith('tr'));
+    if (selectedVoice) utt.voice = selectedVoice;
     utt.onstart = () => setSpeaking(true);
     utt.onend = () => setSpeaking(false);
     utt.onerror = () => setSpeaking(false);
@@ -81,13 +85,13 @@ export default function CoachPage() {
       }]);
       if (voiceEnabled) speak(answer);
     } catch (err) {
-      toast.error('AI koç yanıt veremedi, lütfen tekrar dene');
+      toast.error((t.coach && t.coach.errorResponse) || 'AI koç yanıt veremedi, lütfen tekrar dene');
     } finally {
       setLoading(false);
     }
   };
 
-  const QUICK_PROMPTS = [
+  const QUICK_PROMPTS = (t.coach && t.coach.quickPrompts) || [
     'Bugün ne yapmalıyım?',
     'Stresimi nasıl azaltabilirim?',
     'Kariyer tavsiyesi ver',
@@ -101,33 +105,33 @@ export default function CoachPage() {
         {/* Sidebar */}
         <div style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="card">
-            <h3 style={{ fontWeight: 700, marginBottom: 16, fontSize: 15 }}>🤖 AI Koçun</h3>
+            <h3 style={{ fontWeight: 700, marginBottom: 16, fontSize: 15 }}>🤖 {(t.coach && t.coach.sidebarTitle) || 'AI Koçun'}</h3>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 12 }}>
               <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🧠</div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>Neuro Coach</div>
-                <div style={{ fontSize: 12, color: '#10b981' }}>● Çevrimiçi</div>
+                <div style={{ fontSize: 12, color: '#10b981' }}>● {(t.coach && t.coach.online) || 'Çevrimiçi'}</div>
               </div>
             </div>
             <p style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.5 }}>
-              Beyin tipine göre kişiselleştirilmiş, 7/24 AI koçun.
+              {(t.coach && t.coach.description) || 'Beyin tipine göre kişiselleştirilmiş, 7/24 AI koçun.'}
             </p>
           </div>
 
           {weeklyData && (
             <div className="card">
-              <h3 style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>📊 Bu Hafta</h3>
+              <h3 style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>📊 {(t.coach && t.coach.weekTitle) || 'Bu Hafta'}</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                  <span style={{ color: '#94a3b8' }}>Ort. Ruh Hali</span>
+                  <span style={{ color: '#94a3b8' }}>{(t.coach && t.coach.avgMood) || 'Ort. Ruh Hali'}</span>
                   <span style={{ color: '#00d4ff', fontWeight: 600 }}>{weeklyData.weekSummary.avgMood}/10</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                  <span style={{ color: '#94a3b8' }}>Ort. Enerji</span>
+                  <span style={{ color: '#94a3b8' }}>{(t.coach && t.coach.avgEnergy) || 'Ort. Enerji'}</span>
                   <span style={{ color: '#10b981', fontWeight: 600 }}>{weeklyData.weekSummary.avgEnergy}/10</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                  <span style={{ color: '#94a3b8' }}>Ort. Uyku</span>
+                  <span style={{ color: '#94a3b8' }}>{(t.coach && t.coach.avgSleep) || 'Ort. Uyku'}</span>
                   <span style={{ color: '#7c3aed', fontWeight: 600 }}>{weeklyData.weekSummary.avgSleep}s</span>
                 </div>
               </div>
@@ -135,7 +139,7 @@ export default function CoachPage() {
           )}
 
           <div className="card">
-            <h3 style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>⚡ Hızlı Sorular</h3>
+            <h3 style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>⚡ {(t.coach && t.coach.quickTitle) || 'Hızlı Sorular'}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {QUICK_PROMPTS.map((prompt) => (
                 <button key={prompt} onClick={() => setInput(prompt)}
@@ -159,16 +163,16 @@ export default function CoachPage() {
               <span style={{ color: '#64748b', fontSize: 13 }}>Kişiselleştirilmiş AI - GPT-4</span>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
                 {speaking && (
-                  <button onClick={stopSpeaking} title="Sesi Durdur"
+                  <button onClick={stopSpeaking} title={(t.coach && t.coach.stopVoice) || 'Sesi Durdur'}
                     style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    ⏹ Durdur
+                    ⏹ {(t.coach && t.coach.stopVoice) || 'Durdur'}
                   </button>
                 )}
                 <button
                   onClick={() => { setVoiceEnabled((v) => !v); if (speaking) stopSpeaking(); }}
-                  title={voiceEnabled ? 'Sesi Kapat' : 'Sesi Aç'}
+                  title={voiceEnabled ? ((t.coach && t.coach.voiceOff) || 'Sesi Kapat') : ((t.coach && t.coach.voiceOn) || 'Sesi Aç')}
                   style={{ background: voiceEnabled ? 'rgba(0,212,255,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${voiceEnabled ? 'rgba(0,212,255,0.5)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 8, padding: '5px 12px', fontSize: 13, color: voiceEnabled ? '#00d4ff' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'Inter, sans-serif' }}>
-                  {voiceEnabled ? '🔊 Ses Açık' : '🔇 Ses Kapalı'}
+                  {voiceEnabled ? `🔊 ${(t.coach && t.coach.voiceOn) || 'Ses Açık'}` : `🔇 ${(t.coach && t.coach.voiceOff) || 'Ses Kapalı'}`}
                 </button>
               </div>
             </div>
@@ -215,7 +219,7 @@ export default function CoachPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                placeholder="Koçuna bir şey sor..."
+                placeholder={(t.coach && t.coach.placeholder) || 'Koçuna bir şey sor...'}
                 className="form-input"
                 style={{ flex: 1 }}
               />

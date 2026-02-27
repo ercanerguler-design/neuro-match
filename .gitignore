@@ -30,3 +30,5 @@ backend/uploads/*
 # IDE
 .vscode/
 .idea/
+.vercel
+.env*.local

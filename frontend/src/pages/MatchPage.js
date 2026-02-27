@@ -3,6 +3,7 @@ import { useQuery } from 'react-query';
 import { matchAPI } from '../services/api';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
+import { useLanguage } from '../context/LanguageContext';
 
 const MATCH_TYPES = [
   { value: 'professional', label: 'İş Ortağı', icon: '💼', desc: 'En uyumlu iş ortağını bul' },
@@ -22,6 +23,24 @@ const CO_FOUNDER_ROLES = {
 export default function MatchPage() {
   const [selectedType, setSelectedType] = useState('professional');
   const { user } = useAuthStore();
+  const { t, lang } = useLanguage();
+
+  const MATCH_TYPES = (t.match && t.match.matchTypes) || [
+    { value: 'professional', label: 'İş Ortağı', icon: '💼', desc: 'En uyumlu iş ortağını bul' },
+    { value: 'startup', label: 'Startup Kurucu', icon: '🚀', desc: 'Tamamlayıcı kurucu bul' },
+    { value: 'romantic', label: 'Romantik', icon: '💑', desc: 'Beyin uyumluluğuna göre partner' },
+    { value: 'friendship', label: 'Arkadaşlık', icon: '🤝', desc: 'Derin arkadaşlık uyumu' },
+    { value: 'personal', label: 'Kişisel', icon: '👥', desc: 'Genel uyumluluk analizi' },
+  ];
+
+  const CO_FOUNDER_ROLES = (t.match && t.match.coFounder && t.match.coFounder.roles) || {
+    analytical: { idealRole: 'CTO / Ürün', pairs: ['creative', 'strategic'], tip: 'Sistemi sen kur, yaratıcı ortak vizyonu genişletsin.' },
+    creative: { idealRole: 'CPO / Tasarım', pairs: ['analytical', 'strategic'], tip: 'Ürünü sen şekillendir, analitik ortak tekniği yönetsin.' },
+    empathetic: { idealRole: 'COO / Müşteri', pairs: ['strategic', 'analytical'], tip: 'İnsan odaklı büyüme için stratejik kurucu gerekli.' },
+    strategic: { idealRole: 'CEO / Büyüme', pairs: ['analytical', 'creative'], tip: 'Şirketi sen yönet, yaratıcı ürünü, analitik tekniği geliştirsin.' },
+  };
+
+  const brainLabels = (t.match && t.match.brainLabels) || { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
 
   const { data: compatibles, isFetching } = useQuery(
     ['compatibles', selectedType],
@@ -38,9 +57,9 @@ export default function MatchPage() {
       <MainLayout>
         <div style={{ textAlign: 'center', paddingTop: 80 }}>
           <div style={{ fontSize: 80, marginBottom: 24 }}>🔍</div>
-          <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>Önce Analizini Tamamla</h2>
-          <p style={{ color: '#94a3b8', marginBottom: 32 }}>Eşleştirme özelliğini kullanmak için nörolojik analizini tamamlaman gerekiyor.</p>
-          <a href="/analysis" className="btn btn-primary btn-lg">🧠 Analizi Başlat</a>
+          <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>{lang === 'en' ? 'Complete Your Analysis First' : 'Önce Analizini Tamamla'}</h2>
+          <p style={{ color: '#94a3b8', marginBottom: 32 }}>{lang === 'en' ? 'You need to complete your neurological analysis to use the matching feature.' : 'Eşleştirme özelliğini kullanmak için nörolojik analizini tamamlaman gerekiyor.'}</p>
+          <a href="/analysis" className="btn btn-primary btn-lg">🧠 {lang === 'en' ? 'Start Analysis' : 'Analizi Başlat'}</a>
         </div>
       </MainLayout>
     );
@@ -49,8 +68,8 @@ export default function MatchPage() {
   return (
     <MainLayout>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>💑 Nörolojik Eşleştirme</h1>
-        <p style={{ color: '#94a3b8', marginBottom: 32 }}>Beyin tipine göre en uyumlu kişileri keşfet</p>
+        <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>💑 {(t.match && t.match.pageTitle) || 'Nörolojik Eşleştirme'}</h1>
+        <p style={{ color: '#94a3b8', marginBottom: 32 }}>{lang === 'en' ? 'Discover the most compatible people based on your brain type' : 'Beyin tipine göre en uyumlu kişileri keşfet'}</p>
 
         {/* Match type selector */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 16, marginBottom: 32 }}>
@@ -69,22 +88,22 @@ export default function MatchPage() {
           const myBrain = user?.neuroProfile?.brainType;
           const roleInfo = CO_FOUNDER_ROLES[myBrain] || CO_FOUNDER_ROLES.strategic;
           const brainIcons = { analytical: '🔢', creative: '🎨', empathetic: '💙', strategic: '♟️' };
-          const brainLabels = { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
+          const localBrainLabels = brainLabels;
           return (
             <div className="card" style={{ marginBottom: 32, border: '1px solid rgba(124,58,237,0.3)', background: 'rgba(124,58,237,0.06)' }}>
-              <h3 style={{ fontWeight: 700, marginBottom: 16, color: '#7c3aed' }}>🚀 Startup Kurucu Profili</h3>
+              <h3 style={{ fontWeight: 700, marginBottom: 16, color: '#7c3aed' }}>🚀 {(t.match && t.match.coFounder && t.match.coFounder.title) || 'Startup Kurucu Profili'}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
                 <div style={{ padding: '16px', borderRadius: 12, background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
-                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>Senin Beyin Tipin</div>
-                  <div style={{ fontSize: 20, fontWeight: 800 }}>{brainIcons[myBrain]} {brainLabels[myBrain] || myBrain}</div>
-                  <div style={{ fontSize: 13, color: '#00d4ff', marginTop: 6, fontWeight: 600 }}>Önerilen Rol: {roleInfo.idealRole}</div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>{lang === 'en' ? 'Your Brain Type' : 'Senin Beyin Tipin'}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800 }}>{brainIcons[myBrain]} {localBrainLabels[myBrain] || myBrain}</div>
+                  <div style={{ fontSize: 13, color: '#00d4ff', marginTop: 6, fontWeight: 600 }}>{lang === 'en' ? 'Recommended Role' : 'Önerilen Rol'}: {roleInfo.idealRole}</div>
                 </div>
                 <div style={{ padding: '16px', borderRadius: 12, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}>
-                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>İdeal Kurucu Profili</div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>{lang === 'en' ? 'Ideal Co-founder Profile' : 'İdeal Kurucu Profili'}</div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {roleInfo.pairs.map((bt) => (
                       <span key={bt} style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 20, padding: '4px 12px', fontSize: 13, fontWeight: 600 }}>
-                        {brainIcons[bt]} {brainLabels[bt]}
+                        {brainIcons[bt]} {localBrainLabels[bt]}
                       </span>
                     ))}
                   </div>
@@ -100,7 +119,7 @@ export default function MatchPage() {
         {/* Compatible users */}
         <div style={{ marginBottom: 40 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>
-            🎯 En Uyumlu Kişiler - {MATCH_TYPES.find(t => t.value === selectedType)?.label}
+            🎯 {lang === 'en' ? 'Most Compatible People' : 'En Uyumlu Kişiler'} - {MATCH_TYPES.find(t2 => t2.value === selectedType)?.label}
           </h2>
           {isFetching ? (
             <div style={{ textAlign: 'center', padding: 40 }}>
@@ -116,7 +135,7 @@ export default function MatchPage() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, marginBottom: 4 }}>{u.name}</div>
                     <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 8 }}>
-                      {u.neuroProfile?.brainType === 'analytical' ? '🔢 Analitik' : u.neuroProfile?.brainType === 'creative' ? '🎨 Yaratıcı' : u.neuroProfile?.brainType === 'empathetic' ? '💙 Empatik' : '♟️ Stratejik'}
+                      {u.neuroProfile?.brainType === 'analytical' ? `🔢 ${brainLabels.analytical}` : u.neuroProfile?.brainType === 'creative' ? `🎨 ${brainLabels.creative}` : u.neuroProfile?.brainType === 'empathetic' ? `💙 ${brainLabels.empathetic}` : `♟️ ${brainLabels.strategic}`}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div className="progress-bar" style={{ flex: 1 }}>
@@ -135,7 +154,7 @@ export default function MatchPage() {
         {/* My matches */}
         {myMatches?.length > 0 && (
           <div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>📋 Geçmiş Eşleşmelerim</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>📋 {lang === 'en' ? 'My Past Matches' : 'Geçmiş Eşleşmelerim'}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {myMatches.slice(0, 5).map((match) => (
                 <div key={match._id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

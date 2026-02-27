@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { analysisAPI } from '../services/api';
 import MainLayout from '../components/MainLayout';
+import { useLanguage } from '../context/LanguageContext';
 
 const QUESTIONS = [
   { id: 'q1', category: 'cognitive', text: 'Bir problemi çözerken ilk tepkiniz nedir?', options: ['Verileri toplar ve analiz ederim', 'Sezgimle hareket ederim', 'Farklı bakış açılarını düşünürüm', 'Hemen harekete geçerim'] },
@@ -33,7 +34,6 @@ const QUESTIONS = [
 ];
 
 const CATEGORY_ICONS = { cognitive: '🧠', energy: '⚡', social: '👥', stress: '😤', values: '🎯', career: '💼' };
-const CATEGORY_LABELS = { cognitive: 'Bilişsel', energy: 'Enerji', social: 'Sosyal', stress: 'Stres', values: 'Değerler', career: 'Kariyer' };
 
 export default function AnalysisPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -41,6 +41,8 @@ export default function AnalysisPage() {
   const [loading, setLoading] = useState(false);
   const [analysisStarted, setAnalysisStarted] = useState(false);
   const navigate = useNavigate();
+  const { t, lang } = useLanguage();
+  const CATEGORY_LABELS = (t.analysis && t.analysis.categoryLabels) || { cognitive: 'Bilişsel', energy: 'Enerji', social: 'Sosyal', stress: 'Stres', values: 'Değerler', career: 'Kariyer' };
 
   const currentQ = QUESTIONS[currentIndex];
   const progress = (currentIndex / QUESTIONS.length) * 100;
@@ -59,7 +61,7 @@ export default function AnalysisPage() {
 
   const handleSubmit = async () => {
     if (answered < QUESTIONS.length) {
-      toast.error('Lütfen tüm soruları cevaplayın');
+      toast.error((t.analysis && t.analysis.errorAnswerAll) || 'Lütfen tüm soruları cevaplayın');
       return;
     }
     setLoading(true);
@@ -80,10 +82,10 @@ export default function AnalysisPage() {
       <MainLayout>
         <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center', paddingTop: 60 }}>
           <div style={{ fontSize: 80, marginBottom: 24, animation: 'float 3s ease-in-out infinite', display: 'inline-block' }}>🧠</div>
-          <h1 style={{ fontSize: 40, fontWeight: 800, marginBottom: 16 }}>Nörolojik Analiz</h1>
+          <h1 style={{ fontSize: 40, fontWeight: 800, marginBottom: 16 }}>{(t.analysis && t.analysis.title) || 'Nörolojik Analiz'}</h1>
           <p style={{ color: '#94a3b8', fontSize: 18, lineHeight: 1.7, marginBottom: 48 }}>
-            25 soruluk bilimsel anket ile beyin tipinizi, enerji ritminizi, karar stilinizi ve sosyal örüntülerinizi keşfedin.
-            Ortalama <strong style={{ color: '#00d4ff' }}>10 dakika</strong> sürer.
+            {(t.analysis && t.analysis.startDesc) || '25 soruluk bilimsel anket ile beyin tipinizi keşfedin.'}
+            {' '}{lang === 'en' ? 'Average' : 'Ortalama'} <strong style={{ color: '#00d4ff' }}>{(t.analysis && t.analysis.startMinutes) || '10 dk'}</strong> {lang === 'en' ? 'minutes.' : 'sürer.'}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20, marginBottom: 48 }}>
@@ -91,13 +93,13 @@ export default function AnalysisPage() {
               <div key={key} className="card" style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>{CATEGORY_ICONS[key]}</div>
                 <div style={{ fontWeight: 600, marginBottom: 4 }}>{label}</div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>Analiz edilecek</div>
+                <div style={{ fontSize: 12, color: '#64748b' }}>{(t.analysis && t.analysis.willAnalyze) || 'Analiz edilecek'}</div>
               </div>
             ))}
           </div>
 
           <button onClick={() => setAnalysisStarted(true)} className="btn btn-primary btn-lg" style={{ fontSize: 18, padding: '18px 56px' }}>
-            🚀 Analizi Başlat
+            {(t.analysis && t.analysis.startBtn) || '🚀 Analizi Başlat'}
           </button>
         </div>
       </MainLayout>
@@ -154,18 +156,18 @@ export default function AnalysisPage() {
         {/* Navigation */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))} className="btn btn-secondary" disabled={currentIndex === 0}>
-            ← Geri
+            {(t.analysis && t.analysis.navBack) || '← Geri'}
           </button>
 
-          <span style={{ color: '#64748b', fontSize: 14 }}>{answered} soru cevaplandı</span>
+          <span style={{ color: '#64748b', fontSize: 14 }}>{answered} {(t.analysis && t.analysis.answeredOf) || 'soru cevaplandı'}</span>
 
           {currentIndex === QUESTIONS.length - 1 ? (
             <button onClick={handleSubmit} className="btn btn-primary" disabled={loading || answered < QUESTIONS.length}>
-              {loading ? <div className="loading-spinner" /> : '🧠 Analiz Et →'}
+              {loading ? <div className="loading-spinner" /> : ((t.analysis && t.analysis.navAnalyze) || '🧠 Analiz Et →')}
             </button>
           ) : (
             <button onClick={() => setCurrentIndex(Math.min(QUESTIONS.length - 1, currentIndex + 1))} className="btn btn-secondary">
-              İleri →
+              {(t.analysis && t.analysis.navNext) || 'İleri →'}
             </button>
           )}
         </div>

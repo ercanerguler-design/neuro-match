@@ -5,6 +5,7 @@ import { analysisAPI, authAPI } from '../services/api';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from 'recharts';
+import { useLanguage } from '../context/LanguageContext';
 
 const BRAIN_TYPE_INFO = {
   analytical: { icon: '🔢', label: 'Analitik', color: '#00d4ff', bg: 'rgba(0,212,255,0.1)', desc: 'Veri odaklı, sistematik düşünür, detaylara dikkat eder.' },
@@ -17,6 +18,14 @@ export default function ResultsPage() {
   const { id } = useParams();
   const [dots, setDots] = useState('.');
   const { updateUser } = useAuthStore();
+  const { t, lang } = useLanguage();
+
+  const BRAIN_TYPE_INFO = {
+    analytical: { icon: '🔢', label: (t.results && t.results.brainInfo && t.results.brainInfo.analytical && t.results.brainInfo.analytical.label) || 'Analitik', color: '#00d4ff', bg: 'rgba(0,212,255,0.1)', desc: (t.results && t.results.brainInfo && t.results.brainInfo.analytical && t.results.brainInfo.analytical.desc) || 'Veri odaklı, sistematik düşünür.' },
+    creative: { icon: '🎨', label: (t.results && t.results.brainInfo && t.results.brainInfo.creative && t.results.brainInfo.creative.label) || 'Yaratıcı', color: '#7c3aed', bg: 'rgba(124,58,237,0.1)', desc: (t.results && t.results.brainInfo && t.results.brainInfo.creative && t.results.brainInfo.creative.desc) || 'Yenilikçi, sezgisel, büyük resmi görür.' },
+    empathetic: { icon: '💙', label: (t.results && t.results.brainInfo && t.results.brainInfo.empathetic && t.results.brainInfo.empathetic.label) || 'Empatik', color: '#10b981', bg: 'rgba(16,185,129,0.1)', desc: (t.results && t.results.brainInfo && t.results.brainInfo.empathetic && t.results.brainInfo.empathetic.desc) || 'İnsan odaklı, duygusal zeka yüksek.' },
+    strategic: { icon: '♟️', label: (t.results && t.results.brainInfo && t.results.brainInfo.strategic && t.results.brainInfo.strategic.label) || 'Stratejik', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', desc: (t.results && t.results.brainInfo && t.results.brainInfo.strategic && t.results.brainInfo.strategic.desc) || 'Uzun vadeli düşünür, liderlik doğal.' },
+  };
 
   const { data: analysis, isLoading } = useQuery(
     ['analysis', id],
@@ -57,10 +66,10 @@ export default function ResultsPage() {
       <MainLayout>
         <div style={{ textAlign: 'center', paddingTop: 120 }}>
           <div style={{ fontSize: 80, marginBottom: 24, animation: 'float 2s ease-in-out infinite', display: 'inline-block' }}>🧠</div>
-          <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>AI Analiz Yapıyor{dots}</h2>
-          <p style={{ color: '#94a3b8', marginBottom: 32 }}>GPT-4 tabanlı nörolojik profil oluşturuluyor. Lütfen bekleyin.</p>
+          <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>{(t.results && t.results.loadingTitle) || 'AI Analiz Yapıyor'}{dots}</h2>
+          <p style={{ color: '#94a3b8', marginBottom: 32 }}>{(t.results && t.results.loadingDesc) || 'GPT-4 tabanlı nörolojik profil oluşturuluyor. Lütfen bekleyin.'}</p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            {['Anket verileri işleniyor', 'Beyin tipi tespit ediliyor', 'Profil oluşturuluyor', 'Rapor yazılıyor'].map((step, i) => (
+            {((t.results && t.results.steps) || ['Anket verileri işleniyor', 'Beyin tipi tespit ediliyor', 'Profil oluşturuluyor', 'Rapor yazılıyor']).map((step, i) => (
               <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: 8, padding: '8px 14px', fontSize: 13, color: '#00d4ff' }}>
                 <div className="loading-spinner" style={{ width: 14, height: 14 }} />
                 {step}
@@ -77,8 +86,8 @@ export default function ResultsPage() {
       <MainLayout>
         <div style={{ textAlign: 'center', paddingTop: 80 }}>
           <div style={{ fontSize: 64, marginBottom: 16 }}>❌</div>
-          <h2 style={{ fontSize: 24, marginBottom: 16 }}>Analiz başarısız oldu</h2>
-          <Link to="/analysis" className="btn btn-primary">Tekrar Dene</Link>
+          <h2 style={{ fontSize: 24, marginBottom: 16 }}>{(t.results && t.results.failedTitle) || 'Analiz başarısız oldu'}</h2>
+          <Link to="/analysis" className="btn btn-primary">{(t.results && t.results.retry) || 'Tekrar Dene'}</Link>
         </div>
       </MainLayout>
     );
@@ -88,12 +97,12 @@ export default function ResultsPage() {
   const btInfo = BRAIN_TYPE_INFO[results?.brainType] || BRAIN_TYPE_INFO.analytical;
 
   const radarData = [
-    { subject: 'Analitik', A: results?.brainType === 'analytical' ? 90 : 60 },
-    { subject: 'Yaratıcı', A: results?.brainType === 'creative' ? 90 : 65 },
-    { subject: 'Empatik', A: results?.brainType === 'empathetic' ? 90 : 70 },
-    { subject: 'Stratejik', A: results?.brainType === 'strategic' ? 90 : 68 },
-    { subject: 'Enerji', A: 75 },
-    { subject: 'Sosyal', A: results?.socialPattern === 'extrovert' ? 85 : 55 },
+    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.analytical && t.results.brainInfo.analytical.label) || 'Analitik', A: results?.brainType === 'analytical' ? 90 : 60 },
+    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.creative && t.results.brainInfo.creative.label) || 'Yaratıcı', A: results?.brainType === 'creative' ? 90 : 65 },
+    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.empathetic && t.results.brainInfo.empathetic.label) || 'Empatik', A: results?.brainType === 'empathetic' ? 90 : 70 },
+    { subject: (t.results && t.results.brainInfo && t.results.brainInfo.strategic && t.results.brainInfo.strategic.label) || 'Stratejik', A: results?.brainType === 'strategic' ? 90 : 68 },
+    { subject: lang === 'en' ? 'Energy' : 'Enerji', A: 75 },
+    { subject: lang === 'en' ? 'Social' : 'Sosyal', A: results?.socialPattern === 'extrovert' ? 85 : 55 },
   ];
 
   return (
@@ -102,7 +111,7 @@ export default function ResultsPage() {
         {/* Hero */}
         <div style={{ textAlign: 'center', marginBottom: 48, padding: '48px 32px', background: `linear-gradient(135deg, ${btInfo.bg}, rgba(124,58,237,0.05))`, border: `1px solid ${btInfo.color}30`, borderRadius: 24 }}>
           <div style={{ fontSize: 80, marginBottom: 16 }}>{btInfo.icon}</div>
-          <div className="badge badge-primary" style={{ marginBottom: 16, fontSize: 14 }}>Nörolojik Profil Tamamlandı</div>
+          <div className="badge badge-primary" style={{ marginBottom: 16, fontSize: 14 }}>{lang === 'en' ? 'Neurological Profile Completed' : 'Nörolojik Profil Tamamlandı'}</div>
           <h1 style={{ fontSize: 48, fontWeight: 900, color: btInfo.color, marginBottom: 16 }}>
             {btInfo.label} Beyin Tipi
           </h1>
@@ -113,14 +122,14 @@ export default function ResultsPage() {
             <div style={{ width: 120, height: 120, borderRadius: '50%', background: `linear-gradient(135deg, ${btInfo.color}, #7c3aed)`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', boxShadow: `0 0 40px ${btInfo.color}50` }}>
               <span style={{ fontSize: 40, fontWeight: 900 }}>{results?.overallScore}</span>
             </div>
-            <p style={{ color: '#94a3b8', marginTop: 8, fontSize: 14 }}>Nöro Skor</p>
+            <p style={{ color: '#94a3b8', marginTop: 8, fontSize: 14 }}>{lang === 'en' ? 'Neuro Score' : 'Nöro Skor'}</p>
           </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
           {/* Radar */}
           <div className="card">
-            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>🧠 Nörolojik Harita</h3>
+            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>🧠 {lang === 'en' ? 'Neurological Map' : 'Nörolojik Harita'}</h3>
             <ResponsiveContainer width="100%" height={250}>
               <RadarChart data={radarData}>
                 <PolarGrid stroke="rgba(255,255,255,0.1)" />
@@ -132,13 +141,13 @@ export default function ResultsPage() {
 
           {/* Key stats */}
           <div className="card">
-            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>🎯 Profil Özeti</h3>
+            <h3 style={{ fontWeight: 700, marginBottom: 20 }}>🎯 {lang === 'en' ? 'Profile Summary' : 'Profil Özeti'}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[
-                { label: 'Enerji Ritmi', value: { morning: 'Sabahçı 🌅', evening: 'Akşamcı 🌙', flexible: 'Esnek ⚡' }[results?.energyRhythm] || '—' },
-                { label: 'Karar Stili', value: { rational: 'Rasyonel 🎯', intuitive: 'Sezgisel ✨', balanced: 'Dengeli ⚖️' }[results?.decisionStyle] || '—' },
-                { label: 'Sosyal Örüntü', value: { introvert: 'İntrovert 🔇', extrovert: 'Extrovert 🎉', ambivert: 'Ambivert 🔄' }[results?.socialPattern] || '—' },
-                { label: 'Stres Tepkisi', value: { fight: 'Savaşçı 🥊', flight: 'Kaçınmacı 🦋', freeze: 'Donucu ❄️', tend: 'Bakıcı 🤝' }[results?.stressResponse] || '—' },
+                { label: lang === 'en' ? 'Energy Rhythm' : 'Enerji Ritmi', value: lang === 'en' ? { morning: 'Morning 🌅', evening: 'Evening 🌙', flexible: 'Flexible ⚡' }[results?.energyRhythm] : { morning: 'Sabahyı 🌅', evening: 'Akşamcı 🌙', flexible: 'Esnek ⚡' }[results?.energyRhythm] || '—' },
+                { label: lang === 'en' ? 'Decision Style' : 'Karar Stili', value: lang === 'en' ? { rational: 'Rational 🎯', intuitive: 'Intuitive ✨', balanced: 'Balanced ⚖️' }[results?.decisionStyle] : { rational: 'Rasyonel 🎯', intuitive: 'Sezgisel ✨', balanced: 'Dengeli ⚖️' }[results?.decisionStyle] || '—' },
+                { label: lang === 'en' ? 'Social Pattern' : 'Sosyal Örüntü', value: lang === 'en' ? { introvert: 'Introvert 🔇', extrovert: 'Extrovert 🎉', ambivert: 'Ambivert 🔄' }[results?.socialPattern] : { introvert: 'İntrovert 🔇', extrovert: 'Extrovert 🎉', ambivert: 'Ambivert 🔄' }[results?.socialPattern] || '—' },
+                { label: lang === 'en' ? 'Stress Response' : 'Stres Tepkisi', value: lang === 'en' ? { fight: 'Fighter 🥊', flight: 'Avoidant 🦋', freeze: 'Freeze ❄️', tend: 'Caretaker 🤝' }[results?.stressResponse] : { fight: 'Savaşçı 🥊', flight: 'Kaçınmacı 🦋', freeze: 'Donucu ❄️', tend: 'Bakıcı 🤝' }[results?.stressResponse] || '—' },
               ].map((item) => (
                 <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   <span style={{ color: '#94a3b8', fontSize: 14 }}>{item.label}</span>
@@ -174,7 +183,7 @@ export default function ResultsPage() {
         {/* Career & Daily */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
           <div className="card">
-            <h3 style={{ fontWeight: 700, marginBottom: 16 }}>💼 En Uygun Kariyerler</h3>
+            <h3 style={{ fontWeight: 700, marginBottom: 16 }}>💼 {lang === 'en' ? 'Best Career Matches' : 'En Uygun Kariyerler'}</h3>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {(results?.careerMatches || []).map((career) => (
                 <span key={career} className="badge badge-primary">{career}</span>
@@ -183,7 +192,7 @@ export default function ResultsPage() {
           </div>
 
           <div className="card">
-            <h3 style={{ fontWeight: 700, marginBottom: 16 }}>📋 Günlük Öneriler</h3>
+            <h3 style={{ fontWeight: 700, marginBottom: 16 }}>📋 {lang === 'en' ? 'Daily Recommendations' : 'Günlük Öneriler'}</h3>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {(results?.dailyRecommendations || []).map((rec) => (
                 <li key={rec} style={{ fontSize: 14, color: '#94a3b8', display: 'flex', gap: 8 }}>
@@ -196,9 +205,9 @@ export default function ResultsPage() {
 
         {/* CTA */}
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to="/match" className="btn btn-primary btn-lg">💑 Uyumlu Kişileri Bul</Link>
-          <Link to="/coach" className="btn btn-secondary btn-lg">🤖 AI Koçla Devam Et</Link>
-          <Link to="/dashboard" className="btn btn-secondary btn-lg">📊 Dashboard</Link>
+          <Link to="/match" className="btn btn-primary btn-lg">💑 {lang === 'en' ? 'Find Compatible People' : 'Uyumlu Kişileri Bul'}</Link>
+          <Link to="/coach" className="btn btn-secondary btn-lg">🤖 {lang === 'en' ? 'Continue with AI Coach' : 'AI Koçla Devam Et'}</Link>
+          <Link to="/dashboard" className="btn btn-secondary btn-lg">📊 {lang === 'en' ? 'Dashboard' : 'Dashboard'}</Link>
         </div>
       </div>
     </MainLayout>

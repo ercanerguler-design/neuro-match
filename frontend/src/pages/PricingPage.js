@@ -1,50 +1,55 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-
-const PLANS = [
-  {
-    name: 'Ücretsiz',
-    price: '₺0',
-    period: '/ay',
-    color: '#64748b',
-    features: ['Temel anket analizi', 'Beyin tipi belirleme', 'Temel rapor', 'AI koç (5 soru/gün)', 'Günlük check-in'],
-    cta: 'Ücretsiz Başla',
-    link: '/register',
-    popular: false,
-  },
-  {
-    name: 'Basic',
-    price: '₺99',
-    period: '/ay',
-    color: '#00d4ff',
-    features: ['Tüm ücretsiz özellikler', 'Ses analizi', 'Detaylı kariyer raporu', 'AI koç sınırsız', '5 eşleştirme/ay', 'Haftalık içgörüler'],
-    cta: 'Basic\'e Geç',
-    planId: 'basic',
-    popular: false,
-  },
-  {
-    name: 'Premium',
-    price: '₺299',
-    period: '/ay',
-    color: '#7c3aed',
-    features: ['Tüm Basic özellikler', 'Yüz analizi', 'Kapsamlı nöro rapor', 'Sınırsız eşleştirme', 'İlişki haritası', 'Rapor paylaşımı', 'Öncelikli destek'],
-    cta: 'Premium\'a Geç',
-    planId: 'premium',
-    popular: true,
-  },
-  {
-    name: 'Kurumsal',
-    price: '₺1,999',
-    period: '/ay',
-    color: '#f59e0b',
-    features: ['Tüm Premium özellikler', 'Ekip analizi', 'HR içgörüleri', 'Burnout tespiti', 'API erişimi', 'Özel entegrasyon', 'Dedicated manager'],
-    cta: 'Kurumsal Başvur',
-    link: '/enterprise',
-    popular: false,
-  },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function PricingPage() {
+  const { t, lang } = useLanguage();
+
+  const p = (t.pricing && t.pricing.plans) || {};
+  const mo = (t.pricing && t.pricing.mo) || '/ay';
+  const PLANS = [
+    {
+      name: (p.free && p.free.name) || 'Ücretsiz',
+      price: '₺0',
+      period: mo,
+      color: '#64748b',
+      features: (p.free && p.free.features) || ['Temel anket analizi', 'Beyin tipi belirleme', 'Temel rapor', 'AI koç (5 soru/gün)', 'Günlük check-in'],
+      cta: (p.free && p.free.cta) || 'Ücretsiz Başla',
+      link: '/register',
+      popular: false,
+    },
+    {
+      name: (p.basic && p.basic.name) || 'Basic',
+      price: '₺99',
+      period: mo,
+      color: '#00d4ff',
+      features: (p.basic && p.basic.features) || ['Tüm ücretsiz özellikler', 'Ses analizi', 'Detaylı kariyer raporu', 'AI koç sınırsız', '5 eşleştirme/ay', 'Haftalık içgörüler'],
+      cta: (p.basic && p.basic.cta) || "Basic'e Geç",
+      planId: 'basic',
+      popular: false,
+    },
+    {
+      name: (p.premium && p.premium.name) || 'Premium',
+      price: '₺299',
+      period: mo,
+      color: '#7c3aed',
+      features: (p.premium && p.premium.features) || ['Tüm Basic özellikler', 'Yüz analizi', 'Kapsamlı nöro rapor', 'Sınırsız eşleştirme', 'İlişki haritası', 'Rapor paylaşımı', 'Öncelikli destek'],
+      cta: (p.premium && p.premium.cta) || "Premium'a Geç",
+      planId: 'premium',
+      popular: true,
+    },
+    {
+      name: (p.enterprise && p.enterprise.name) || 'Kurumsal',
+      price: '₺1,999',
+      period: mo,
+      color: '#f59e0b',
+      features: (p.enterprise && p.enterprise.features) || ['Tüm Premium özellikler', 'Ekip analizi', 'HR içgörüleri', 'Burnout tespiti', 'API erişimi', 'Özel entegrasyon', 'Dedicated manager'],
+      cta: (p.enterprise && p.enterprise.cta) || 'Kurumsal Başvur',
+      link: '/enterprise',
+      popular: false,
+    },
+  ];
+
   const handleUpgrade = async (planId) => {
     const token = localStorage.getItem('neuro-auth');
     if (!token) {
@@ -66,11 +71,11 @@ export default function PricingPage() {
 
       <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <Link to="/" style={{ color: '#00d4ff', textDecoration: 'none', fontSize: 14, marginBottom: 24, display: 'inline-block' }}>← Ana Sayfa</Link>
+          <Link to="/" style={{ color: '#00d4ff', textDecoration: 'none', fontSize: 14, marginBottom: 24, display: 'inline-block' }}>← {(t.pricing && t.pricing.homeLink) || 'Ana Sayfa'}</Link>
           <h1 style={{ fontSize: 56, fontWeight: 900, marginBottom: 16 }}>
-            <span style={{ background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Fiyatlandırma</span>
+            <span style={{ background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{(t.pricing && t.pricing.pageTitle) || 'Fiyatlandırma'}</span>
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: 18 }}>İhtiyacına göre plan seç. İstediğin zaman iptal et.</p>
+          <p style={{ color: '#94a3b8', fontSize: 18 }}>{(t.pricing && t.pricing.pageSubtitle) || 'İhtiyacına göre plan seç. İstediğin zaman iptal et.'}</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
@@ -78,7 +83,7 @@ export default function PricingPage() {
             <div key={plan.name} style={{ position: 'relative' }}>
               {plan.popular && (
                 <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', borderRadius: 999, padding: '4px 16px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', zIndex: 1 }}>
-                  🔥 En Popüler
+                  🔥 {(t.pricing && t.pricing.popular) || 'En Popüler'}
                 </div>
               )}
               <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', border: plan.popular ? `2px solid ${plan.color}` : undefined, boxShadow: plan.popular ? `0 0 30px ${plan.color}30` : undefined }}>
@@ -114,7 +119,7 @@ export default function PricingPage() {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 48, color: '#64748b', fontSize: 14 }}>
-          ✅ 14 gün ücretsiz deneme &nbsp;|&nbsp; 🔒 Güvenli ödeme &nbsp;|&nbsp; ❌ İstediğin zaman iptal
+          ✅ {lang === 'en' ? '14-day free trial' : '14 gün ücretsiz deneme'} &nbsp;|&nbsp; 🔒 {lang === 'en' ? 'Secure payment' : 'Güvenli ödeme'} &nbsp;|&nbsp; ❌ {lang === 'en' ? 'Cancel anytime' : 'İstediğin zaman iptal'}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
+import { useLanguage } from '../context/LanguageContext';
 
 const CONTENT_LIBRARY = {
   analytical: [
@@ -65,7 +66,7 @@ const CONTENT_BODIES = {
   23: `Her Cuma veya Pazartesi 30 dakika. Bu rutin uzun vadeli strateji ile günlük aksiyonları bağlar.\n\n**Haftalık Review Soruları**\n1. Bu hafta gerçekten ne başardım?\n2. Stratejik hedeflerime ne kadar yaklaştım?\n3. Neyi erteledim ve gerçek neden ne?\n4. Önümüzdeki hafta en yüksek etkili 3 aksiyon nedir?\n5. Kayması gereken bir proje var mı?\n\n**Önerilen Araçlar**\n- Notion veya Obsidian — haftalık şablon\n- OKR tracker\n- "Not-To-Do" listesi — ne yapmamalısın?\n\n**Temel Prensip**\n30 dakika harcanan bu review, hafta içinde saatler kurtarır ve stratejik kayışı önler.`,
   24: `X-Neu verilerine göre platform üzerindeki analizlerde başarılı seri girişimcilerin büyük çoğunluğu stratejik beyin tipinde çıktı.\n\n**Stratejik Girişimcinin Güçleri**\n- Uzun vadeli büyüme modellerini görme\n- Kaynakları etkili tahsis etme\n- Pazardaki boşlukları erken fark etme\n- Doğru zamanlama için sabır\n\n**Dikkat Edilmesi Gereken**\nStratejik beyin tipleri aşırı planlayıp geç başlayabilirler. "Mükemmel plan" beklentisi erken momentum kaybına yol açar. Bir an harekete geç.\n\n**Tamamlayıcı Kurucu Kombinasyonları**\n- Stratejik + Yaratıcı: Vizyon + ürün\n- Stratejik + Empatik: Vizyon + ekip/müşteri\n- Stratejik + Analitik: Vizyon + veri\n\n**Öneri**: Kendi beyin tipini tamamlayan bir kurucu ara.`,
 };
-const BRAIN_TABS = [
+const BRAIN_TABS_TR = [
   { key: 'mine', label: 'Benim İçin', icon: '🧠' },
   { key: 'analytical', label: 'Analitik', icon: '🔢' },
   { key: 'creative', label: 'Yaratıcı', icon: '🎨' },
@@ -73,8 +74,18 @@ const BRAIN_TABS = [
   { key: 'strategic', label: 'Stratejik', icon: '♟️' },
 ];
 
+const BRAIN_TABS_EN = [
+  { key: 'mine', label: 'For Me', icon: '🧠' },
+  { key: 'analytical', label: 'Analytical', icon: '🔢' },
+  { key: 'creative', label: 'Creative', icon: '🎨' },
+  { key: 'empathetic', label: 'Empathetic', icon: '💙' },
+  { key: 'strategic', label: 'Strategic', icon: '♟️' },
+];
+
 export default function ContentPage() {
   const { user } = useAuthStore();
+  const { t, lang } = useLanguage();
+  const BRAIN_TABS = lang === 'en' ? BRAIN_TABS_EN : BRAIN_TABS_TR;
   const myBrain = user?.neuroProfile?.brainType || 'analytical';
   const [activeTab, setActiveTab] = useState('mine');
   const [filter, setFilter] = useState('all');
@@ -95,8 +106,8 @@ export default function ContentPage() {
       <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>🎓 İçerik Öneri Motoru</h1>
-          <p style={{ color: '#94a3b8' }}>Beyin tipine göre kişiselleştirilmiş makale, video ve alıştırmalar</p>
+          <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>🎓 {(t.content && t.content.title) || 'İçerik Öneri Motoru'}</h1>
+          <p style={{ color: '#94a3b8' }}>{(t.content && t.content.subtitle) || 'Beyin tipine göre kişisel, makale, video ve alıştırmalar'}</p>
         </div>
 
         {/* Brain Type Tabs */}
@@ -106,7 +117,7 @@ export default function ContentPage() {
               style={{ background: activeTab === tab.key ? 'rgba(0,212,255,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${activeTab === tab.key ? 'rgba(0,212,255,0.5)' : 'rgba(255,255,255,0.08)'}`, color: activeTab === tab.key ? '#00d4ff' : '#94a3b8', borderRadius: 10, padding: '8px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'Inter, sans-serif' }}>
               {tab.icon} {tab.label}
               {tab.key === 'mine' && (
-                <span style={{ marginLeft: 6, fontSize: 10, background: 'rgba(0,212,255,0.2)', borderRadius: 10, padding: '1px 6px' }}>Kişisel</span>
+                <span style={{ marginLeft: 6, fontSize: 10, background: 'rgba(0,212,255,0.2)', borderRadius: 10, padding: '1px 6px' }}>{lang === 'en' ? 'Personal' : 'Kişisel'}</span>
               )}
             </button>
           ))}
@@ -114,8 +125,11 @@ export default function ContentPage() {
 
         {/* Content Type Filter */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 28, alignItems: 'center' }}>
-          <span style={{ color: '#64748b', fontSize: 13 }}>Filtrele:</span>
-          {[['all', 'Tümü', '🌐'], ['article', 'Makale', '📄'], ['video', 'Video', '🎬'], ['book', 'Kitap', '📖'], ['tool', 'Araç', '🛠️'], ['exercise', 'Egzersiz', '⚡']].map(([v, l, icon]) => (
+          <span style={{ color: '#64748b', fontSize: 13 }}>{lang === 'en' ? 'Filter:' : 'Filtrele:'}</span>
+          {(lang === 'en'
+            ? [['all', 'All', '🌐'], ['article', 'Article', '📄'], ['video', 'Video', '🎬'], ['book', 'Book', '📖'], ['tool', 'Tool', '🛠️'], ['exercise', 'Exercise', '⚡']]
+            : [['all', 'Tümü', '🌐'], ['article', 'Makale', '📄'], ['video', 'Video', '🎬'], ['book', 'Kitap', '📖'], ['tool', 'Araç', '🛠️'], ['exercise', 'Egzersiz', '⚡']]
+          ).map(([v, l, icon]) => (
             <button key={v} onClick={() => setFilter(v)}
               style={{ background: filter === v ? 'rgba(124,58,237,0.15)' : 'transparent', border: `1px solid ${filter === v ? 'rgba(124,58,237,0.4)' : 'rgba(255,255,255,0.08)'}`, color: filter === v ? '#a78bfa' : '#64748b', borderRadius: 8, padding: '5px 12px', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'Inter, sans-serif' }}>
               {icon} {l}
@@ -126,7 +140,7 @@ export default function ContentPage() {
         {/* Active brain label */}
         {activeTab === 'mine' && (
           <div style={{ marginBottom: 20, padding: '10px 16px', borderRadius: 10, background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.15)', fontSize: 13, color: '#94a3b8' }}>
-            🧠 Beyin tipine göre seçilen içerikler: <strong style={{ color: '#00d4ff' }}>{myBrain.charAt(0).toUpperCase() + myBrain.slice(1)}</strong>
+            🧠 {lang === 'en' ? 'Content selected for your brain type' : 'Beyin tipine göre seçilen içerikler'}: <strong style={{ color: '#00d4ff' }}>{myBrain.charAt(0).toUpperCase() + myBrain.slice(1)}</strong>
           </div>
         )}
 
@@ -161,7 +175,7 @@ export default function ContentPage() {
               <button onClick={() => setSelected(item)} style={{ background: `linear-gradient(90deg, ${item.color}22, transparent)`, border: `1px solid ${item.color}33`, color: item.color, borderRadius: 8, padding: '8px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif', transition: 'all 0.2s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = `${item.color}22`; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = `linear-gradient(90deg, ${item.color}22, transparent)`; }}>
-                Okumaya Başla →
+                {(t.content && t.content.readBtn) || 'Okumaya Başla'} →
               </button>
             </div>
           ))}
@@ -185,7 +199,7 @@ export default function ContentPage() {
                     <h2 style={{ fontWeight: 800, fontSize: 20, lineHeight: 1.3, margin: 0 }}>{selected.title}</h2>
                   </div>
                 </div>
-                <button onClick={() => setSelected(null)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: '#94a3b8', fontSize: 18, flexShrink: 0 }}>✕</button>
+                <button onClick={() => setSelected(null)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', color: '#94a3b8', fontSize: 18, flexShrink: 0 }}>{(t.content && t.content.closeBtn) ? t.content.closeBtn.replace('✕ ', '') : '✕'}</button>
               </div>
               <p style={{ color: '#64748b', fontSize: 13, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>{selected.desc}</p>
               <div>
@@ -206,11 +220,11 @@ export default function ContentPage() {
               <div style={{ marginTop: 24, display: 'flex', gap: 10, justifyContent: 'flex-end', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16 }}>
                 <button onClick={() => toggleSave(selected.id)}
                   style={{ background: saved.includes(selected.id) ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.06)', border: `1px solid ${saved.includes(selected.id) ? 'rgba(245,158,11,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 8, padding: '8px 16px', fontSize: 13, color: saved.includes(selected.id) ? '#f59e0b' : '#94a3b8', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
-                  {saved.includes(selected.id) ? '⭐ Kaydedildi' : '☆ Kaydet'}
+                  {saved.includes(selected.id) ? `⭐ ${lang === 'en' ? 'Saved' : 'Kaydedildi'}` : `☆ ${lang === 'en' ? 'Save' : 'Kaydet'}`}
                 </button>
                 <button onClick={() => setSelected(null)}
                   style={{ background: `linear-gradient(135deg, ${selected.color}, #7c3aed)`, border: 'none', borderRadius: 8, padding: '8px 20px', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
-                  Kapat
+                  {(t.content && t.content.closeBtn) || `✕ ${lang === 'en' ? 'Close' : 'Kapat'}`}
                 </button>
               </div>
             </div>

@@ -3,23 +3,31 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
 import { communityAPI } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
-const ROOMS = [
-  { key: 'analytical', label: 'Analitik', icon: '🔢', color: '#00d4ff', desc: 'Veri, sistem ve mantık odaklı tartışmalar', members: 1243 },
-  { key: 'creative', label: 'Yaratıcı', icon: '🎨', color: '#7c3aed', desc: 'Tasarım, sanat ve inovasyon paylaşımları', members: 987 },
-  { key: 'empathetic', label: 'Empatik', icon: '💙', color: '#10b981', desc: 'İnsan ilişkileri, duygusal zeka ve bağlantı', members: 1567 },
-  { key: 'strategic', label: 'Stratejik', icon: '♟️', color: '#f59e0b', desc: 'Girişimcilik, liderlik ve büyüme stratejileri', members: 832 },
-];
-
-const BRAIN_LABELS = { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
 const BRAIN_COLORS = { analytical: '#00d4ff', creative: '#7c3aed', empathetic: '#10b981', strategic: '#f59e0b' };
 
 export default function CommunityPage() {
   const { user } = useAuthStore();
   const qc = useQueryClient();
+  const { t, lang } = useLanguage();
   const myBrain = user?.neuroProfile?.brainType || 'analytical';
   const [activeRoom, setActiveRoom] = useState(myBrain);
   const [newPost, setNewPost] = useState('');
+
+  const ROOMS = (t.community && t.community.rooms) ? [
+    { key: 'analytical', label: t.community.rooms.analytical.label, icon: '🔢', color: '#00d4ff', desc: t.community.rooms.analytical.desc, members: 1243 },
+    { key: 'creative', label: t.community.rooms.creative.label, icon: '🎨', color: '#7c3aed', desc: t.community.rooms.creative.desc, members: 987 },
+    { key: 'empathetic', label: t.community.rooms.empathetic.label, icon: '💙', color: '#10b981', desc: t.community.rooms.empathetic.desc, members: 1567 },
+    { key: 'strategic', label: t.community.rooms.strategic.label, icon: '♟️', color: '#f59e0b', desc: t.community.rooms.strategic.desc, members: 832 },
+  ] : [
+    { key: 'analytical', label: 'Analitik', icon: '🔢', color: '#00d4ff', desc: 'Veri, sistem ve mantık odaklı tartışmalar', members: 1243 },
+    { key: 'creative', label: 'Yaratıcı', icon: '🎨', color: '#7c3aed', desc: 'Tasarım, sanat ve inovasyon paylaşımları', members: 987 },
+    { key: 'empathetic', label: 'Empatik', icon: '💙', color: '#10b981', desc: 'İnsan ilişkileri, duygusal zeka ve bağlantı', members: 1567 },
+    { key: 'strategic', label: 'Stratejik', icon: '♟️', color: '#f59e0b', desc: 'Girişimcilik, liderlik ve büyüme stratejileri', members: 832 },
+  ];
+
+  const BRAIN_LABELS = (t.match && t.match.brainLabels) || { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
   const currentRoom = ROOMS.find((r) => r.key === activeRoom);
 
   const { data: postsData, isLoading } = useQuery(
@@ -66,14 +74,14 @@ export default function CommunityPage() {
     <MainLayout>
       <div style={{ maxWidth: 960, margin: '0 auto' }}>
         <div style={{ marginBottom: 32 }}>
-          <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>🤝 Beyin Tipi Toplulukları</h1>
-          <p style={{ color: '#94a3b8' }}>Aynı beyin tipindeki insanlarla bağlan, fikir paylaş, birlikte büyü</p>
+          <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>🤝 {(t.community && t.community.title) || 'Beyin Tipi Toplulukları'}</h1>
+          <p style={{ color: '#94a3b8' }}>{(t.community && t.community.subtitle) || 'Aynı beyin tipindeki insanlarla bağlan, fikir paylaş, birlikte büyü'}</p>
         </div>
 
         <div style={{ display: 'flex', gap: 24 }}>
           <div style={{ width: 260, flexShrink: 0 }}>
             <div className="card" style={{ padding: '16px' }}>
-              <h3 style={{ fontWeight: 700, marginBottom: 14, fontSize: 14 }}>🏠 Topluluklar</h3>
+              <h3 style={{ fontWeight: 700, marginBottom: 14, fontSize: 14 }}>🏠 {(t.community && t.community.sidebarTitle) || 'Topluluklar'}</h3>
               {ROOMS.map((room) => (
                 <button key={room.key} onClick={() => setActiveRoom(room.key)}
                   style={{ width: '100%', textAlign: 'left', background: activeRoom === room.key ? `${room.color}14` : 'transparent', border: `1px solid ${activeRoom === room.key ? room.color + '44' : 'transparent'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer', marginBottom: 6, transition: 'all 0.2s', fontFamily: 'Inter, sans-serif' }}>
@@ -82,7 +90,7 @@ export default function CommunityPage() {
                     <span style={{ fontWeight: 700, fontSize: 13, color: activeRoom === room.key ? room.color : '#e2e8f0' }}>{room.label}</span>
                     {room.key === myBrain && <span style={{ fontSize: 10, background: 'rgba(0,212,255,0.2)', color: '#00d4ff', borderRadius: 8, padding: '1px 6px' }}>Sen</span>}
                   </div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>{room.members.toLocaleString('tr-TR')} üye</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>{room.members.toLocaleString(lang === 'en' ? 'en-US' : 'tr-TR')} {(t.community && t.community.members) || 'üye'}</div>
                 </button>
               ))}
             </div>
@@ -114,8 +122,8 @@ export default function CommunityPage() {
                   <p style={{ color: '#94a3b8', fontSize: 13, margin: 0 }}>{currentRoom?.desc}</p>
                 </div>
                 <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: currentRoom?.color }}>{currentRoom?.members.toLocaleString('tr-TR')}</div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>üye</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: currentRoom?.color }}>{currentRoom?.members.toLocaleString(lang === 'en' ? 'en-US' : 'tr-TR')}</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>{(t.community && t.community.members) || 'üye'}</div>
                 </div>
               </div>
             </div>
@@ -128,15 +136,15 @@ export default function CommunityPage() {
                 <div style={{ flex: 1 }}>
                   <textarea value={newPost} onChange={(e) => setNewPost(e.target.value)}
                     onKeyDown={(e) => { if (e.ctrlKey && e.key === 'Enter') handlePost(); }}
-                    placeholder={`${currentRoom?.label} topluluğuyla bir şey paylaş...`}
+                    placeholder={(t.community && t.community.postPlaceholder) ? `${(t.community.sidebarTitle ? currentRoom?.label + ' ' : '')}${t.community.postPlaceholder}` : `${currentRoom?.label} topluluuğuyla bir şey paylaş...`}
                     rows={3}
                     style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 12px', color: '#e2e8f0', fontSize: 14, resize: 'none', fontFamily: 'Inter, sans-serif', outline: 'none', boxSizing: 'border-box', lineHeight: 1.6 }}
                   />
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-                    <span style={{ fontSize: 11, color: '#475569' }}>Ctrl+Enter ile gönder</span>
+                    <span style={{ fontSize: 11, color: '#475569' }}>{lang === 'en' ? 'Press Ctrl+Enter to send' : 'Ctrl+Enter ile gönder'}</span>
                     <button onClick={handlePost} disabled={!newPost.trim() || createMutation.isLoading}
                       style={{ background: newPost.trim() ? `linear-gradient(135deg, ${currentRoom?.color}, #7c3aed)` : 'rgba(255,255,255,0.06)', border: 'none', color: '#fff', borderRadius: 8, padding: '8px 20px', fontSize: 13, fontWeight: 700, cursor: newPost.trim() ? 'pointer' : 'not-allowed', fontFamily: 'Inter, sans-serif', opacity: createMutation.isLoading ? 0.7 : 1 }}>
-                      {createMutation.isLoading ? '...' : '📤 Paylaş'}
+                      {createMutation.isLoading ? '...' : `📤 ${(t.community && t.community.postBtn) || 'Paylaş'}`}
                     </button>
                   </div>
                 </div>
@@ -144,7 +152,7 @@ export default function CommunityPage() {
             </div>
 
             {isLoading ? (
-              <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>Gönderiler yükleniyor...</div>
+              <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>{(t.community && t.community.loading) || 'Gönderiler yükleniyor...'}</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {roomPosts.map((post) => (
