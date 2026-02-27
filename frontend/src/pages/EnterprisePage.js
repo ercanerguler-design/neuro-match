@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from 'react-query';
 import toast from 'react-hot-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell, ResponsiveContainer, ReferenceLine } from 'recharts';
@@ -17,7 +17,6 @@ export default function EnterprisePage() {
 
   // ── Enterprise Dashboard (for enterprise/admin users) ─────────────────────
   const EnterpriseDashboard = () => {
-    const navigate = useNavigate();
     const qc = useQueryClient();
     const [actionModal, setActionModal] = useState(null); // 'analysis' | 'addMember' | null
     const [analysisData, setAnalysisData] = useState(null);
