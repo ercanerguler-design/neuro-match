@@ -35,19 +35,23 @@ export default function MatchPage() {
   // Use normalized brainType (lowercase) everywhere
   const myBrainType = rawBrainType ? rawBrainType.toLowerCase() : null;
 
-  const MATCH_TYPES = (t.match && t.match.matchTypes) || [
-    { value: 'professional', label: 'İş Ortağı', icon: '💼', desc: 'En uyumlu iş ortağını bul' },
-    { value: 'startup', label: 'Startup Kurucu', icon: '🚀', desc: 'Tamamlayıcı kurucu bul' },
-    { value: 'romantic', label: 'Romantik', icon: '💑', desc: 'Beyin uyumluluğuna göre partner' },
-    { value: 'friendship', label: 'Arkadaşlık', icon: '🤝', desc: 'Derin arkadaşlık uyumu' },
-    { value: 'personal', label: 'Kişisel', icon: '👥', desc: 'Genel uyumluluk analizi' },
+  // MATCH_TYPES is always an array — labels/descs pulled from t.match.matchTypes object
+  const matchTypesI18n = (t.match && t.match.matchTypes) || {};
+  const MATCH_TYPES = [
+    { value: 'professional', icon: '💼', label: matchTypesI18n.professional?.label || 'İş Ortağı',     desc: matchTypesI18n.professional?.desc || 'En uyumlu iş ortağını bul' },
+    { value: 'startup',      icon: '🚀', label: matchTypesI18n.startup?.label      || 'Startup Kurucu', desc: matchTypesI18n.startup?.desc      || 'Tamamlayıcı kurucu bul' },
+    { value: 'romantic',     icon: '💑', label: matchTypesI18n.romantic?.label     || 'Romantik',       desc: matchTypesI18n.romantic?.desc     || 'Beyin uyumluluğuna göre partner' },
+    { value: 'friendship',   icon: '🤝', label: matchTypesI18n.friendship?.label   || 'Arkadaşlık',     desc: matchTypesI18n.friendship?.desc   || 'Derin arkadaşlık uyumu' },
+    { value: 'personal',     icon: '👥', label: matchTypesI18n.personal?.label     || 'Kişisel',        desc: matchTypesI18n.personal?.desc     || 'Genel uyumluluk analizi' },
   ];
 
-  const CO_FOUNDER_ROLES = (t.match && t.match.coFounder && t.match.coFounder.roles) || {
-    analytical: { idealRole: 'CTO / Ürün', pairs: ['creative', 'strategic'], tip: 'Sistemi sen kur, yaratıcı ortak vizyonu genişletsin.' },
-    creative: { idealRole: 'CPO / Tasarım', pairs: ['analytical', 'strategic'], tip: 'Ürünü sen şekillendir, analitik ortak tekniği yönetsin.' },
-    empathetic: { idealRole: 'COO / Müşteri', pairs: ['strategic', 'analytical'], tip: 'İnsan odaklı büyüme için stratejik kurucu gerekli.' },
-    strategic: { idealRole: 'CEO / Büyüme', pairs: ['analytical', 'creative'], tip: 'Şirketi sen yönet, yaratıcı ürünü, analitik tekniği geliştirsin.' },
+  // CO_FOUNDER_ROLES always has pairs; labels/tips pulled from translations if available
+  const rolesI18n = (t.match && t.match.coFounder && t.match.coFounder.roles) || {};
+  const CO_FOUNDER_ROLES = {
+    analytical: { idealRole: rolesI18n.analytical?.idealRole || 'CTO / Ürün',    pairs: ['creative', 'strategic'],  tip: rolesI18n.analytical?.tip || 'Sistemi sen kur, yaratıcı ortak vizyonu genişletsin.' },
+    creative:   { idealRole: rolesI18n.creative?.idealRole   || 'CPO / Tasarım', pairs: ['analytical', 'strategic'], tip: rolesI18n.creative?.tip   || 'Ürünü sen şekillendir, analitik ortak tekniği yönetsin.' },
+    empathetic: { idealRole: rolesI18n.empathetic?.idealRole || 'COO / Müşteri', pairs: ['strategic', 'analytical'], tip: rolesI18n.empathetic?.tip || 'İnsan odaklı büyüme için stratejik kurucu gerekli.' },
+    strategic:  { idealRole: rolesI18n.strategic?.idealRole  || 'CEO / Büyüme',  pairs: ['analytical', 'creative'],  tip: rolesI18n.strategic?.tip  || 'Şirketi sen yönet, yaratıcı ürünü, analitik tekniği geliştirsin.' },
   };
 
   const brainLabels = (t.match && t.match.brainLabels) || { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
