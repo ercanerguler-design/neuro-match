@@ -35,6 +35,7 @@ const enterpriseRoutes = require('./routes/enterprise');
 const coachRoutes = require('./routes/coach');
 const seedRoutes = require('./routes/seed');
 const adminRoutes = require('./routes/admin');
+const communityRoutes = require('./routes/community');
 
 const app = express();
 
@@ -91,7 +92,7 @@ app.get('/health', (req, res) => {
     status: 'healthy',
     time: new Date().toISOString(),
     version: '1.0.0',
-    service: 'NEURO-MATCH API',
+    service: 'X-Neu API',
   });
 });
 
@@ -106,6 +107,7 @@ app.use('/api/v1/enterprise', enterpriseRoutes);
 app.use('/api/v1/coach', coachRoutes);
 app.use('/api/v1/seed', seedRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/community', communityRoutes);
 
 // Error handler
 app.use(errorHandler);

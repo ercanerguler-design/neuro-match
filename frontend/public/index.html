@@ -4,15 +4,31 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0a0a1a" />
-    <meta name="description" content="NEURO-MATCH - Dünya'nın İlk Nörolojik Uyumluluk Platformu" />
-    <meta property="og:title" content="NEURO-MATCH" />
+    <meta name="description" content="X-Neu - Dünya'nın İlk Nörolojik Uyumluluk Platformu" />
+    <meta property="og:title" content="X-Neu" />
     <meta property="og:description" content="Beynini keşfet. Potansiyelini aç. Hayatını optimize et." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="X-Neu" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <title>NEURO-MATCH | Beynini Keşfet</title>
+    <title>X-Neu | Beynini Keşfet</title>
   </head>
   <body>
     <noscript>JavaScript gereklidir.</noscript>
     <div id="root"></div>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').then(function (reg) {
+            console.log('[X-Neu PWA] Service Worker registered:', reg.scope);
+          }).catch(function (err) {
+            console.warn('[X-Neu PWA] SW registration failed:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

@@ -65,6 +65,8 @@ export default function DashboardPage() {
 
   const [showCheckin, setShowCheckin] = useState(false);
   const [checkinData, setCheckinData] = useState({ mood: 7, energy: 7, stress: 4, focus: 7 });
+  const [aiInsight, setAiInsight] = useState(null);
+  const [showInsight, setShowInsight] = useState(false);
 
   const { data: dashboard, isLoading: dashLoading } = useQuery(
     'dashboard',
@@ -85,8 +87,14 @@ export default function DashboardPage() {
   const checkinMutation = useMutation(
     (data) => userAPI.checkin(data),
     {
-      onSuccess: () => {
-        toast.success(d.checkinSaved);
+      onSuccess: (res) => {
+        const insight = res?.data?.aiInsight;
+        if (insight) {
+          setAiInsight(insight);
+          setShowInsight(true);
+        } else {
+          toast.success(d.checkinSaved);
+        }
         setShowCheckin(false);
         qc.invalidateQueries('dashboard');
       },
@@ -99,12 +107,25 @@ export default function DashboardPage() {
   const brainLabel = t.brainTypes[user?.neuroProfile?.brainType] || d.notDetermined;
   const radarData = buildRadarData(user?.neuroProfile, lang);
 
+  // Gamification data
+  const gami = dashboard?.gamification || {};
+  const xpPercent = gami.neededXP ? Math.round((gami.currentXP / gami.neededXP) * 100) : 0;
+
   const moodData = (dashboard?.recentCheckins || []).slice(-7).map((c, i) => ({
     day: lang === 'en'
       ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]
       : ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'][i],
     [d.mood]: c.mood,
     [d.energy]: c.energy,
+  }));
+
+  // 30-day check-in trend
+  const trendData = (dashboard?.checkinHistory || []).map((c, i) => ({
+    day: i + 1,
+    mood: c.mood,
+    energy: c.energy,
+    stress: c.stress,
+    focus: c.focus,
   }));
 
   const stats = [
@@ -190,6 +211,60 @@ export default function DashboardPage() {
           ))}
         </div>
 
+        {/* Gamification Panel */}
+        {(gami.xp > 0 || gami.level > 0) && (
+          <div className="card" style={{ marginBottom: 22, background: 'linear-gradient(135deg,rgba(0,212,255,0.06),rgba(124,58,237,0.06))', border: '1px solid rgba(124,58,237,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16, marginBottom: 20 }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>
+                  📈 {lang === 'tr' ? 'Nöro Seviyesi' : 'Neuro Level'}
+                  <span style={{ background: 'linear-gradient(135deg,#00d4ff,#7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginLeft: 10, fontSize: 20, fontWeight: 900 }}>
+                    Lv. {gami.level || 1}
+                  </span>
+                </h3>
+                <p style={{ color: '#64748b', fontSize: 12 }}>{gami.xp || 0} XP — {lang === 'tr' ? 'Bir sonraki seviye için' : 'Next level in'} {(gami.neededXP || 100) - (gami.currentXP || 0)} XP</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: '#f59e0b' }}>{gami.streak || 0} 🔥</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>{lang === 'tr' ? 'Günlük Seri' : 'Daily Streak'}</div>
+                </div>
+              </div>
+            </div>
+            {/* XP Progress Bar */}
+            <div style={{ height: 8, background: 'rgba(255,255,255,0.08)', borderRadius: 4, marginBottom: 16, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 4, transition: 'width 0.5s ease',
+                background: 'linear-gradient(90deg,#00d4ff,#7c3aed)',
+                width: `${xpPercent}%`,
+              }} />
+            </div>
+            {/* Badges */}
+            {(gami.badges || []).length > 0 ? (
+              <div>
+                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  🏅 {lang === 'tr' ? 'Rozetler' : 'Badges'}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {(gami.badges || []).map((badge) => (
+                    <div key={badge.id} title={badge.name} style={{
+                      background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 10, padding: '6px 12px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6,
+                    }}>
+                      <span>{badge.emoji}</span>
+                      <span style={{ color: '#94a3b8', fontSize: 12 }}>{badge.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p style={{ color: '#475569', fontSize: 13 }}>
+                {lang === 'tr' ? '🎯 Analiz tamamla, check-in yap ve rozet kazan!' : '🎯 Complete analyses, check in daily, and earn badges!'}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Main grid */}
         <div style={{ display: 'grid', gridTemplateColumns: hasProfile ? '1fr 1fr' : '1fr', gap: 22, marginBottom: 22 }}>
           {hasProfile && (
@@ -237,10 +312,18 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Mood chart */}
-        {moodData.length > 0 && (
-          <div className="card" style={{ marginBottom: 22 }}>
-            <h3 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>{d.weeklyMood}</h3>
+        {/* Mood chart - always visible */}
+        <div className="card" style={{ marginBottom: 22 }}>
+          <h3 style={{ fontWeight: 700, marginBottom: 20, fontSize: 16 }}>{d.weeklyMood}</h3>
+          {moodData.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '30px 0', color: '#475569' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>📊</div>
+              <p style={{ fontSize: 14, marginBottom: 14 }}>{lang === 'tr' ? 'Henüz check-in verisi yok. İlk kaydını yap!' : 'No check-in data yet. Log your first entry!'}</p>
+              <button onClick={() => setShowCheckin(true)} style={{ background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', border: 'none', color: '#fff', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+                ✅ {lang === 'tr' ? 'Check-in Yap' : 'Log Check-in'}
+              </button>
+            </div>
+          ) : (
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={moodData} margin={{ top: 5, right: 10, bottom: 0, left: -20 }}>
                 <defs>
@@ -261,6 +344,47 @@ export default function DashboardPage() {
                 <Area type="monotone" dataKey={d.energy} stroke="#7c3aed" fill="url(#energyGrad)" strokeWidth={2} dot={{ fill: '#7c3aed', r: 4 }} />
               </AreaChart>
             </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* 30-Day Check-in Trend */}
+        {trendData.length > 0 && (
+          <div className="card" style={{ marginBottom: 22 }}>
+            <h3 style={{ fontWeight: 700, marginBottom: 6, fontSize: 16 }}>
+              📅 {lang === 'tr' ? '30 Günlük Nöro Takibi' : '30-Day Neuro Trend'}
+            </h3>
+            <p style={{ color: '#64748b', fontSize: 13, marginBottom: 16 }}>
+              {lang === 'tr' ? 'Beyin durumunun zaman içindeki değişimi' : 'How your brain state evolves over time'}
+            </p>
+            <ResponsiveContainer width="100%" height={180}>
+              <AreaChart data={trendData} margin={{ top: 5, right: 10, bottom: 0, left: -20 }}>
+                <defs>
+                  <linearGradient id="moodGrad30" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#00d4ff" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#00d4ff" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="stressGrad30" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                <XAxis dataKey="day" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} label={{ value: lang === 'tr' ? 'Gün' : 'Day', fill: '#475569', fontSize: 11, position: 'insideBottomRight', offset: -5 }} />
+                <YAxis domain={[0, 10]} tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ background: '#0f0f2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', fontSize: 12 }} />
+                <Area type="monotone" dataKey="mood" name={lang === 'tr' ? 'Ruh Hali' : 'Mood'} stroke="#00d4ff" fill="url(#moodGrad30)" strokeWidth={1.5} dot={false} />
+                <Area type="monotone" dataKey="energy" name={lang === 'tr' ? 'Enerji' : 'Energy'} stroke="#10b981" fill="none" strokeWidth={1.5} dot={false} />
+                <Area type="monotone" dataKey="stress" name={lang === 'tr' ? 'Stres' : 'Stress'} stroke="#ef4444" fill="url(#stressGrad30)" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
+              </AreaChart>
+            </ResponsiveContainer>
+            <div style={{ display: 'flex', gap: 20, marginTop: 10 }}>
+              {[{c:'#00d4ff',l:lang==='tr'?'Ruh Hali':'Mood'},{c:'#10b981',l:lang==='tr'?'Enerji':'Energy'},{c:'#ef4444',l:lang==='tr'?'Stres':'Stress'}].map(x=>(
+                <div key={x.l} style={{display:'flex',alignItems:'center',gap:6}}>
+                  <div style={{width:24,height:3,background:x.c,borderRadius:2}}/>
+                  <span style={{fontSize:12,color:'#64748b'}}>{x.l}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -338,6 +462,32 @@ export default function DashboardPage() {
               }}
             >
               {checkinMutation.isLoading ? <div className="loading-spinner" /> : `📊 ${t.common.save}`}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* AI Mood Insight Modal */}
+      {showInsight && aiInsight && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 1001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={() => setShowInsight(false)}>
+          <div className="glass" style={{ width: '100%', maxWidth: 480, padding: 36, position: 'relative', border: '1px solid rgba(0,212,255,0.3)' }}
+            onClick={(e) => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ fontSize: 44, marginBottom: 8 }}>🧠</div>
+              <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4, color: '#00d4ff' }}>
+                {lang === 'tr' ? 'Nöro-Analiz Sonucu' : 'AI Mood Analysis'}
+              </h2>
+              <p style={{ fontSize: 12, color: '#475569' }}>
+                {lang === 'tr' ? 'Ruh hali verilerin analiz edildi' : 'Based on your recent check-ins'}
+              </p>
+            </div>
+            <div style={{ background: 'rgba(0,212,255,0.06)', border: '1px solid rgba(0,212,255,0.15)', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+              <p style={{ fontSize: 14, lineHeight: 1.8, color: '#e2e8f0', margin: 0 }}>{aiInsight}</p>
+            </div>
+            <button onClick={() => { setShowInsight(false); toast.success(d.checkinSaved); }}
+              style={{ width: '100%', padding: 13, borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>
+              ✓ {lang === 'tr' ? 'Anladım, teşekkürler!' : 'Got it, thanks!'}
             </button>
           </div>
         </div>

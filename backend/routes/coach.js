@@ -41,7 +41,7 @@ router.post('/ask', asyncHandler(async (req, res) => {
     messages: [
       {
         role: 'system',
-        content: `Sen NEURO-MATCH'in kişisel AI koçusun. Kullanıcının beyin tipi: ${user.neuroProfile?.brainType || 'bilinmiyor'}. Bu profile göre kişiselleştirilmiş, bilimsel temelli ve motive edici cevaplar ver. Türkçe cevapla.`,
+        content: `Sen X-Neu'nun kişisel AI koçusun. Kullanıcının beyin tipi: ${user.neuroProfile?.brainType || 'bilinmiyor'}. Bu profile göre kişiselleştirilmiş, bilimsel temelli ve motive edici cevaplar ver. Türkçe cevapla.`,
       },
       { role: 'user', content: question },
     ],

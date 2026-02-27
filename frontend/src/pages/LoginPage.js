@@ -34,6 +34,15 @@ export default function LoginPage() {
       <div className="bg-orb" style={{ width: 400, height: 400, background: 'radial-gradient(circle, rgba(0,212,255,0.15) 0%, transparent 70%)', top: 0, left: 0 }} />
       <div className="bg-orb" style={{ width: 300, height: 300, background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)', bottom: 0, right: 0 }} />
 
+      {/* Geri / Anasayfa butonu */}
+      <div style={{ position: 'fixed', top: 20, left: 20, zIndex: 100 }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '7px 14px', color: '#94a3b8', fontSize: 13, fontWeight: 600, textDecoration: 'none', transition: 'all .2s' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,212,255,0.1)'; e.currentTarget.style.color = '#00d4ff'; e.currentTarget.style.borderColor = 'rgba(0,212,255,0.3)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}>
+          ← {lang === 'tr' ? 'Anasayfa' : 'Home'}
+        </Link>
+      </div>
+
       {/* Language Toggle */}
       <div style={{ position: 'fixed', top: 20, right: 20, display: 'flex', gap: 8, zIndex: 100 }}>
         {['tr', 'en'].map((l) => (
@@ -46,7 +55,7 @@ export default function LoginPage() {
       <div className="glass" style={{ width: '100%', maxWidth: 440, padding: 48, position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>🧠</div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 8 }}>NEURO-MATCH</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 800, background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: 8 }}>X-Neu</h1>
           <p style={{ color: '#94a3b8' }}>{t.auth.loginTitle}</p>
         </div>
 

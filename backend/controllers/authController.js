@@ -31,11 +31,11 @@ exports.register = asyncHandler(async (req, res, next) => {
   try {
     await sendEmail({
       email: user.email,
-      subject: 'NEURO-MATCH - Email Doğrulama',
+      subject: 'X-Neu - Email Doğrulama',
       message: `Hesabınızı doğrulamak için: ${verifyUrl}`,
       html: `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#0a0a1a;color:#fff;border-radius:16px">
-          <h1 style="color:#00d4ff;text-align:center">🧠 NEURO-MATCH</h1>
+          <h1 style="color:#00d4ff;text-align:center">🧠 X-Neu</h1>
           <h2 style="color:#fff">Hoş Geldiniz, ${user.name}!</h2>
           <p>Email adresinizi doğrulamak için aşağıdaki butona tıklayın:</p>
           <a href="${verifyUrl}" style="display:block;text-align:center;background:linear-gradient(135deg,#00d4ff,#7c3aed);color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;margin:20px 0">Email Doğrula</a>
@@ -107,10 +107,10 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
   try {
     await sendEmail({
       email: user.email,
-      subject: 'NEURO-MATCH - Şifre Sıfırlama',
+      subject: 'X-Neu - Şifre Sıfırlama',
       html: `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#0a0a1a;color:#fff;border-radius:16px">
-          <h1 style="color:#00d4ff;text-align:center">🧠 NEURO-MATCH</h1>
+          <h1 style="color:#00d4ff;text-align:center">🧠 X-Neu</h1>
           <h2>Şifre Sıfırlama</h2>
           <p>Şifrenizi sıfırlamak için aşağıdaki butona tıklayın:</p>
           <a href="${resetUrl}" style="display:block;text-align:center;background:linear-gradient(135deg,#00d4ff,#7c3aed);color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;margin:20px 0">Şifremi Sıfırla</a>

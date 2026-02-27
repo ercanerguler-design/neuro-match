@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>X-Neu — Digital Catalog</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cyan: #00d4ff;
+    --purple: #7c3aed;
+    --dark: #0a0a1a;
+    --dark2: #0d0d24;
+    --dark3: #12122b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --border: rgba(255,255,255,0.08);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,26,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; box-shadow: 0 0 20px rgba(0,212,255,0.3);
+  }
+  .nav-logo-text {
+    font-size: 17px; font-weight: 800;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none; font-size: 14px;
+    font-weight: 500; transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--cyan); }
+  .nav-cta {
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: #fff; padding: 9px 22px; border-radius: 10px;
+    font-weight: 700; font-size: 14px; text-decoration: none;
+    box-shadow: 0 0 20px rgba(0,212,255,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 0 30px rgba(0,212,255,0.5); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 100px 20px 60px;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,212,255,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(124,58,237,0.1) 0%, transparent 60%);
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.25);
+    border-radius: 100px; padding: 6px 18px; font-size: 13px;
+    color: var(--cyan); font-weight: 600; margin-bottom: 28px;
+    position: relative;
+  }
+  .hero-badge-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--cyan); box-shadow: 0 0 8px var(--cyan);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 76px);
+    font-weight: 900; line-height: 1.1; margin-bottom: 24px;
+    position: relative;
+  }
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    font-size: clamp(16px, 2vw, 20px);
+    color: var(--muted); max-width: 680px; margin: 0 auto 40px;
+    position: relative;
+  }
+  .hero-btns { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; position: relative; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: #fff; padding: 14px 32px; border-radius: 12px;
+    font-weight: 700; font-size: 16px; text-decoration: none;
+    box-shadow: 0 0 30px rgba(0,212,255,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(0,212,255,0.5); }
+  .btn-secondary {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    color: var(--text); padding: 14px 32px; border-radius: 12px;
+    font-weight: 600; font-size: 16px; text-decoration: none;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+  .hero-stats {
+    display: flex; gap: 48px; flex-wrap: wrap; justify-content: center;
+    margin-top: 70px; position: relative;
+    padding-top: 40px; border-top: 1px solid var(--border);
+    width: 100%; max-width: 800px;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat-num {
+    font-size: 36px; font-weight: 900;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-stat-label { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  /* ── SECTIONS ── */
+  section { padding: 100px 20px; }
+  .container { max-width: 1200px; margin: 0 auto; }
+  .section-tag {
+    display: inline-block;
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+    color: var(--cyan); font-size: 12px; font-weight: 700;
+    padding: 5px 14px; border-radius: 100px; margin-bottom: 16px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .section-title {
+    font-size: clamp(28px, 4vw, 48px); font-weight: 800;
+    line-height: 1.2; margin-bottom: 16px;
+  }
+  .section-title span {
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .section-sub { color: var(--muted); font-size: 17px; max-width: 600px; line-height: 1.7; }
+
+  /* ── PROBLEM ── */
+  .problem-bg { background: var(--dark2); }
+  .problem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 52px; }
+  .problem-card {
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .problem-card:hover { border-color: rgba(239,68,68,0.4); transform: translateY(-4px); }
+  .problem-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, #ef4444, #f97316);
+  }
+  .problem-num {
+    font-size: 40px; font-weight: 900; color: rgba(239,68,68,0.2);
+    line-height: 1; margin-bottom: 12px;
+  }
+  .problem-stat { font-size: 22px; font-weight: 800; color: #ef4444; margin-bottom: 8px; }
+  .problem-text { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+  /* ── HOW IT WORKS ── */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-top: 56px; position: relative; }
+  .steps::before {
+    content: '';
+    position: absolute; top: 50px; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--purple), transparent);
+    opacity: 0.3;
+  }
+  .step {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px 24px;
+    text-align: center; position: relative;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .step:hover { border-color: rgba(0,212,255,0.3); transform: translateY(-4px); }
+  .step-num {
+    width: 48px; height: 48px; border-radius: 50%; margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800;
+    box-shadow: 0 0 20px rgba(0,212,255,0.3);
+  }
+  .step-icon { font-size: 32px; margin-bottom: 16px; }
+  .step h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+  .step p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ── FEATURES ── */
+  .features-bg { background: var(--dark2); }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; margin-top: 56px; }
+  .feature-card {
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 16px; padding: 32px;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .feature-card:hover { border-color: rgba(0,212,255,0.3); transform: translateY(-4px); }
+  .feature-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .feature-card:hover::after { opacity: 1; }
+  .feature-icon {
+    width: 52px; height: 52px; border-radius: 14px; margin-bottom: 20px;
+    background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(124,58,237,0.15));
+    border: 1px solid rgba(0,212,255,0.2);
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+  }
+  .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+  .feature-tag {
+    display: inline-block; margin-top: 16px;
+    background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.25);
+    color: #c084fc; font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  /* ── PLANS ── */
+  .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; margin-top: 56px; }
+  .plan-card {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 36px 28px;
+    position: relative; transition: transform 0.2s;
+    display: flex; flex-direction: column;
+  }
+  .plan-card:hover { transform: translateY(-6px); }
+  .plan-card.featured {
+    border-color: rgba(0,212,255,0.4);
+    background: linear-gradient(160deg, rgba(0,212,255,0.05) 0%, rgba(124,58,237,0.05) 100%);
+    box-shadow: 0 0 40px rgba(0,212,255,0.12);
+  }
+  .plan-badge {
+    position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: #fff; font-size: 12px; font-weight: 800;
+    padding: 5px 18px; border-radius: 100px; white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,212,255,0.4);
+  }
+  .plan-name { font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .plan-price { font-size: 40px; font-weight: 900; margin-bottom: 4px; line-height: 1; }
+  .plan-price span { font-size: 16px; font-weight: 500; color: var(--muted); }
+  .plan-period { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+  .plan-features { list-style: none; flex: 1; }
+  .plan-features li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text);
+  }
+  .plan-features li:last-child { border-bottom: none; }
+  .plan-features li .check { color: var(--cyan); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .plan-features li .cross { color: var(--muted); font-size: 16px; flex-shrink: 0; }
+  .plan-btn {
+    display: block; text-align: center; margin-top: 28px;
+    padding: 13px; border-radius: 12px; font-weight: 700; font-size: 15px;
+    text-decoration: none; transition: all 0.2s;
+  }
+  .plan-btn-primary {
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    color: #fff; box-shadow: 0 0 20px rgba(0,212,255,0.3);
+  }
+  .plan-btn-primary:hover { box-shadow: 0 0 40px rgba(0,212,255,0.5); transform: translateY(-1px); }
+  .plan-btn-outline {
+    border: 1px solid var(--border); color: var(--text); background: transparent;
+  }
+  .plan-btn-outline:hover { border-color: rgba(0,212,255,0.4); color: var(--cyan); }
+
+  /* ── ENTERPRISE ── */
+  .enterprise-section {
+    background: linear-gradient(135deg, rgba(0,212,255,0.04) 0%, rgba(124,58,237,0.06) 100%);
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  .enterprise-inner {
+    border: 1px solid rgba(124,58,237,0.25);
+    border-radius: 24px; padding: 60px;
+    background: var(--dark2);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+  }
+  .enterprise-features { list-style: none; margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .enterprise-features li { display: flex; align-items: center; gap: 12px; font-size: 15px; }
+  .enterprise-features li .icon {
+    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+    background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3);
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .enterprise-right { display: flex; flex-direction: column; gap: 20px; }
+  .enterprise-stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .e-stat {
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; text-align: center;
+  }
+  .e-stat-num { font-size: 28px; font-weight: 900; color: var(--cyan); }
+  .e-stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .enterprise-cta {
+    background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(124,58,237,0.08));
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 14px; padding: 24px; text-align: center;
+  }
+  .enterprise-cta h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .enterprise-cta p { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+
+  /* ── AI SECTION ── */
+  .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+  .ai-visual {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px; position: relative; overflow: hidden;
+  }
+  .ai-visual::before {
+    content: '';
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle at center, rgba(0,212,255,0.06) 0%, transparent 60%);
+    animation: rotate 10s linear infinite;
+  }
+  @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .ai-brain { font-size: 80px; text-align: center; margin-bottom: 20px; position: relative; }
+  .ai-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; position: relative; }
+  .ai-chip {
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.2);
+    color: var(--cyan); padding: 7px 14px; border-radius: 100px;
+    font-size: 12px; font-weight: 600;
+  }
+  .ai-features { display: flex; flex-direction: column; gap: 20px; }
+  .ai-feature {
+    background: var(--dark2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 24px;
+    display: flex; align-items: flex-start; gap: 16px;
+    transition: border-color 0.2s;
+  }
+  .ai-feature:hover { border-color: rgba(0,212,255,0.3); }
+  .ai-feature-icon {
+    width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(0,212,255,0.12), rgba(124,58,237,0.12));
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .ai-feature h4 { font-size: 15px; font-weight: 700; margin-bottom: 5px; }
+  .ai-feature p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* ── TECH STACK ── */
+  .tech-bg { background: var(--dark2); }
+  .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; margin-top: 48px; }
+  .tech-item {
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 16px; text-align: center;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .tech-item:hover { border-color: rgba(0,212,255,0.3); transform: translateY(-3px); }
+  .tech-item-icon { font-size: 28px; margin-bottom: 10px; }
+  .tech-item-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .tech-item-role { font-size: 11px; color: var(--muted); }
+
+  /* ── CONTACT ── */
+  .contact-section { text-align: center; }
+  .contact-box {
+    max-width: 700px; margin: 48px auto 0;
+    background: var(--dark2); border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 24px; padding: 52px 48px;
+    box-shadow: 0 0 60px rgba(0,212,255,0.08);
+    position: relative; overflow: hidden;
+  }
+  .contact-box::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), var(--purple), transparent);
+  }
+  .contact-methods { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-top: 28px; }
+  .contact-method {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 22px; text-decoration: none;
+    color: var(--text); font-size: 14px; font-weight: 600;
+    transition: all 0.2s;
+  }
+  .contact-method:hover { border-color: rgba(0,212,255,0.4); color: var(--cyan); transform: translateY(-2px); }
+  .contact-method span { font-size: 20px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--dark2); border-top: 1px solid var(--border);
+    padding: 40px 20px; text-align: center;
+  }
+  footer .footer-logo {
+    font-size: 20px; font-weight: 800;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+  }
+  footer p { color: var(--muted); font-size: 13px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .enterprise-inner { grid-template-columns: 1fr; padding: 32px; gap: 32px; }
+    .ai-grid { grid-template-columns: 1fr; gap: 32px; }
+    .contact-box { padding: 32px 24px; }
+    .enterprise-stat-cards { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── SCROLL ANIMATIONS ── */
+  .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">🧠</div>
+    <span class="nav-logo-text">X-Neu</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#problem">The Problem</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#plans">Pricing</a></li>
+    <li><a href="#enterprise">Enterprise</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="https://x-neu.com" target="_blank" class="nav-cta">Try the Platform →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <div class="hero-badge-dot"></div>
+    Are you ready to truly meet yourself for the first time?
+  </div>
+  <h1>
+    You think you<br />
+    <span>know yourself.</span>
+  </h1>
+  <p>
+    48 questions. 12 minutes. And a result that will probably surprise you.<br />
+    X-Neu turns how your brain works into data —
+    so you match with people who actually fit you.
+  </p>
+  <div class="hero-btns">
+    <a href="https://x-neu.com" target="_blank" class="btn-primary">Take the Test, Free →</a>
+    <a href="#features" class="btn-secondary">See How It Works</a>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">48</div>
+      <div class="hero-stat-label">Neurological Questions</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">85%</div>
+      <div class="hero-stat-label">Match Accuracy</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">GPT-4</div>
+      <div class="hero-stat-label">AI Engine</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">7</div>
+      <div class="hero-stat-label">Neurotype Profiles</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section id="problem" class="problem-bg">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-tag">Let's Be Honest</div>
+      <h2 class="section-title">Did you really think <span>MBTI defined you?</span></h2>
+      <p class="section-sub">
+        We've all done a test, stared at the screen and thought "wait, is that actually me?"
+        Then a year later, took it again — completely different result.
+        Because those tests measure how you change. Not how your brain works.
+      </p>
+    </div>
+    <div class="problem-grid fade-in">
+      <div class="problem-card">
+        <div class="problem-num">01</div>
+        <div class="problem-stat">67%</div>
+        <div class="problem-text">of employees never reach their full potential at work. Wrong teams, wrong roles, wrong fit.</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-num">02</div>
+        <div class="problem-stat">200%</div>
+        <div class="problem-text">A bad hire can cost 50–200% of that person's annual salary. Invisible cost. Very real damage.</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-num">03</div>
+        <div class="problem-stat">40%</div>
+        <div class="problem-text">Misaligned teams reduce productivity by 40%. Conflict, communication breakdowns, low morale.</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-num">04</div>
+        <div class="problem-stat">$322B</div>
+        <div class="problem-text">Employee burnout costs the global economy $322 billion per year. Early detection changes everything.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-tag">How It Works</div>
+      <h2 class="section-title">It won't take long, <span>we promise.</span></h2>
+      <p class="section-sub">Sign up, answer the questions, see your result. 12 minutes. Nothing complicated.</p>
+    </div>
+    <div class="steps fade-in">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-icon">📋</div>
+        <h3>48 Questions</h3>
+        <p>Thought-provoking, not boring. There are no "right" answers — only your answers. 12 minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-icon">🧠</div>
+        <h3>AI Analysis</h3>
+        <p>GPT-4 and our own algorithm run in the background. While you wait, the system gets to know you.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-icon">🎯</div>
+        <h3>7 Neurotypes</h3>
+        <p>Analyst, Visionary, Empath, Leader, Creative, Coordinator or Catalyst — when you see yours, you'll say "that's it."</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-icon">💑</div>
+        <h3>Matching</h3>
+        <p>People who truly fit your brain type appear in your feed. We look at compatibility, not CVs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="features-bg">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-tag">What We Offer</div>
+      <h2 class="section-title">Not a test. <span>A mirror.</span></h2>
+      <p class="section-sub">We didn't build something that tells you what happened. We built something that shows you why.</p>
+    </div>
+    <div class="features-grid fade-in">
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h3>Neurological Analysis</h3>
+        <p>How does your brain make decisions? How does it behave under stress? How strong is your empathy? Honest analysis across 7 dimensions.</p>
+        <span class="feature-tag">Core Feature</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💑</div>
+        <h3>Smart Matching</h3>
+        <p>Ever wondered "why do I click so well with this person?" Now you can see it before it happens. Brain compatibility, not credentials.</p>
+        <span class="feature-tag">AI-Powered</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>AI Coach</h3>
+        <p>Personalized to you, not generic advice. Knowing your strengths is great — but seeing your blind spots changes your life.</p>
+        <span class="feature-tag">GPT-4</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Detailed Reports</h3>
+        <p>Not "generic stuff." Career, relationships, stress management — tailored to you. Download as PDF, share with whoever you want.</p>
+        <span class="feature-tag">Premium</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏢</div>
+        <h3>Team Management</h3>
+        <p>View all employee profiles from one dashboard, measure team compatibility, and detect burnout risk before it hits.</p>
+        <span class="feature-tag">Enterprise</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Privacy & Security</h3>
+        <p>We don't sell your data. We don't give it to ad companies. Your profile belongs to you. Period.</p>
+        <span class="feature-tag">GDPR Compliant</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI SECTION -->
+<section id="ai">
+  <div class="container">
+    <div class="ai-grid fade-in">
+      <div class="ai-visual">
+        <div class="ai-brain">🧠</div>
+        <div class="ai-chips">
+          <div class="ai-chip">Decision Analysis</div>
+          <div class="ai-chip">Empathy Score</div>
+          <div class="ai-chip">Stress Tolerance</div>
+          <div class="ai-chip">Leadership Potential</div>
+          <div class="ai-chip">Communication Style</div>
+          <div class="ai-chip">Motivation Source</div>
+          <div class="ai-chip">Risk Tolerance</div>
+          <div class="ai-chip">Learning Style</div>
+        </div>
+      </div>
+      <div>
+        <div class="section-tag">Straight Talk</div>
+        <h2 class="section-title">What actually <span>makes us different?</span></h2>
+        <div class="ai-features">
+          <div class="ai-feature">
+            <div class="ai-feature-icon">🔬</div>
+            <div>
+              <h4>Neuroscience-Based</h4>
+              <p>Not MBTI. Not Enneagram. We're not dismissing those — we're just measuring something different. Biology-based, stable traits.</p>
+            </div>
+          </div>
+          <div class="ai-feature">
+            <div class="ai-feature-icon">⚡</div>
+            <div>
+              <h4>Instant Results</h4>
+              <p>No "we'll email you in 3–5 business days." The moment you answer the last question, your result is already waiting for you.</p>
+            </div>
+          </div>
+          <div class="ai-feature">
+            <div class="ai-feature-icon">🎯</div>
+            <div>
+              <h4>85% Match Accuracy</h4>
+              <p>Easy to say, we know. But ask yourself: how many times did something start great and then just fall apart?</p>
+            </div>
+          </div>
+          <div class="ai-feature">
+            <div class="ai-feature-icon">📈</div>
+            <div>
+              <h4>Gets Smarter Over Time</h4>
+              <p>As more users join, matching gets more accurate. We're early stage — which is both an advantage and an opportunity.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLANS -->
+<section id="plans">
+  <div class="container">
+    <div class="fade-in" style="text-align:center; margin-bottom: 0;">
+      <div class="section-tag">Pricing</div>
+      <h2 class="section-title">Try first, <span>decide later.</span></h2>
+      <p class="section-sub" style="margin: 0 auto;">No credit card required. Start free, upgrade when you're ready.</p>
+    </div>
+    <div class="plans-grid fade-in">
+      <!-- FREE -->
+      <div class="plan-card">
+        <div class="plan-name">Free</div>
+        <div class="plan-price">$0 <span>/mo</span></div>
+        <div class="plan-period">Free forever</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> 48-question analysis (once)</li>
+          <li><span class="check">✓</span> 7 neurotype results</li>
+          <li><span class="check">✓</span> Basic profile</li>
+          <li><span class="check">✓</span> 3 match previews</li>
+          <li><span class="cross">✗</span> Detailed report</li>
+          <li><span class="cross">✗</span> AI Coach access</li>
+          <li><span class="cross">✗</span> Re-analysis</li>
+        </ul>
+        <a href="https://x-neu.com/register" target="_blank" class="plan-btn plan-btn-outline">Start Free</a>
+      </div>
+      <!-- BASIC -->
+      <div class="plan-card featured">
+        <div class="plan-badge">Most Popular</div>
+        <div class="plan-name">Basic</div>
+        <div class="plan-price">$9 <span>/mo</span></div>
+        <div class="plan-period">or $79/year (2 months free)</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Unlimited re-analysis</li>
+          <li><span class="check">✓</span> All matches unlocked</li>
+          <li><span class="check">✓</span> PDF report download</li>
+          <li><span class="check">✓</span> AI Coach (20 msgs/mo)</li>
+          <li><span class="check">✓</span> Career compatibility analysis</li>
+          <li><span class="check">✓</span> Growth tracking dashboard</li>
+          <li><span class="cross">✗</span> Team management</li>
+        </ul>
+        <a href="https://x-neu.com/register" target="_blank" class="plan-btn plan-btn-primary">Get Started</a>
+      </div>
+      <!-- PREMIUM -->
+      <div class="plan-card">
+        <div class="plan-name">Premium</div>
+        <div class="plan-price">$19 <span>/mo</span></div>
+        <div class="plan-period">or $159/year</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Everything in Basic</li>
+          <li><span class="check">✓</span> Unlimited AI Coach</li>
+          <li><span class="check">✓</span> Priority matching</li>
+          <li><span class="check">✓</span> Relationship compatibility</li>
+          <li><span class="check">✓</span> Stress & burnout tracking</li>
+          <li><span class="check">✓</span> Leadership potential report</li>
+          <li><span class="check">✓</span> Priority support</li>
+        </ul>
+        <a href="https://x-neu.com/register" target="_blank" class="plan-btn plan-btn-outline">Go Premium</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ENTERPRISE -->
+<section id="enterprise" class="enterprise-section">
+  <div class="container">
+    <div class="enterprise-inner fade-in">
+      <div>
+        <div class="section-tag">Enterprise</div>
+        <h2 class="section-title" style="font-size: clamp(24px,3vw,40px);">Manage your team <span>with data, not gut feelings.</span></h2>
+        <p style="color:var(--muted); font-size:15px; margin-top:12px;">
+          Analyze employee profiles, measure team compatibility, detect burnout risk early.
+          Make HR decisions backed by science, not instinct.
+        </p>
+        <ul class="enterprise-features">
+          <li><div class="icon">👥</div> Unlimited employee profile analysis</li>
+          <li><div class="icon">📊</div> Team Compatibility Dashboard — who should work together?</li>
+          <li><div class="icon">🔥</div> Burnout Risk Early Warning System</li>
+          <li><div class="icon">🎯</div> Candidate neurotype matching for hiring</li>
+          <li><div class="icon">🏆</div> Hidden leadership potential detection</li>
+          <li><div class="icon">📈</div> Monthly / Annual team performance reports</li>
+          <li><div class="icon">🔗</div> HR software integrations (API)</div></li>
+        </ul>
+      </div>
+      <div class="enterprise-right">
+        <div class="enterprise-stat-cards">
+          <div class="e-stat">
+            <div class="e-stat-num">85%</div>
+            <div class="e-stat-label">More accurate hiring</div>
+          </div>
+          <div class="e-stat">
+            <div class="e-stat-num">40%</div>
+            <div class="e-stat-label">Productivity increase</div>
+          </div>
+          <div class="e-stat">
+            <div class="e-stat-num">60%</div>
+            <div class="e-stat-label">Lower turnover</div>
+          </div>
+          <div class="e-stat">
+            <div class="e-stat-num">3x</div>
+            <div class="e-stat-label">ROI improvement</div>
+          </div>
+        </div>
+        <div class="enterprise-cta">
+          <h4>🎯 First 10 Enterprise Clients</h4>
+          <p>Limited spots — reach out now for a free demo and custom pricing.</p>
+          <a href="mailto:sce@scegrup.com" class="btn-primary" style="display:inline-block; padding:12px 28px; text-decoration:none; border-radius:10px;">Request a Demo →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section class="tech-bg">
+  <div class="container">
+    <div class="fade-in" style="text-align:center; margin-bottom:0;">
+      <div class="section-tag">Technology</div>
+      <h2 class="section-title">Reliable <span>Infrastructure</span></h2>
+      <p class="section-sub" style="margin: 0 auto;">Enterprise-grade tech stack. Scalable, secure, and built to last.</p>
+    </div>
+    <div class="tech-grid fade-in">
+      <div class="tech-item"><div class="tech-item-icon">⚛️</div><div class="tech-item-name">React</div><div class="tech-item-role">Frontend</div></div>
+      <div class="tech-item"><div class="tech-item-icon">🟢</div><div class="tech-item-name">Node.js</div><div class="tech-item-role">Backend</div></div>
+      <div class="tech-item"><div class="tech-item-icon">🍃</div><div class="tech-item-name">MongoDB</div><div class="tech-item-role">Database</div></div>
+      <div class="tech-item"><div class="tech-item-icon">🤖</div><div class="tech-item-name">GPT-4</div><div class="tech-item-role">AI Engine</div></div>
+      <div class="tech-item"><div class="tech-item-icon">▲</div><div class="tech-item-name">Vercel</div><div class="tech-item-role">Hosting</div></div>
+      <div class="tech-item"><div class="tech-item-icon">🔐</div><div class="tech-item-name">JWT</div><div class="tech-item-role">Security</div></div>
+      <div class="tech-item"><div class="tech-item-icon">💳</div><div class="tech-item-name">Stripe</div><div class="tech-item-role">Payments</div></div>
+      <div class="tech-item"><div class="tech-item-icon">🌐</div><div class="tech-item-name">x-neu.com</div><div class="tech-item-role">Domain</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="contact-section">
+  <div class="container">
+    <div class="fade-in">
+      <div class="section-tag">Contact</div>
+      <h2 class="section-title">Don't hesitate <span>to reach out.</span></h2>
+      <p class="section-sub" style="margin: 0 auto;">
+        For enterprise pricing, a demo, a technical question, or simply "what even is this?" — write to us. We actually read it.
+      </p>
+    </div>
+    <div class="contact-box fade-in">
+      <h3 style="font-size:22px; font-weight:800; margin-bottom:10px;">🧠 X-Neu</h3>
+      <p style="color:var(--muted); font-size:15px;">Built by two people. We're not a big company — but we're trying to build something big.</p>
+      <div class="contact-methods">
+        <a href="mailto:sce@scegrup.com" class="contact-method">
+          <span>✉️</span> sce@scegrup.com
+        </a>
+        <a href="https://x-neu.com" target="_blank" class="contact-method">
+          <span>🌐</span> x-neu.com
+        </a>
+        <a href="https://www.linkedin.com/company/x-neu" class="contact-method">
+          <span>💼</span> LinkedIn
+        </a>
+      </div>
+      <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <a href="https://x-neu.com/register" target="_blank" class="btn-primary" style="display:inline-block; padding:14px 40px; text-decoration:none; font-size:16px; border-radius:12px;">
+          Create a Free Account →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">🧠 X-Neu</div>
+  <p>© 2026 X-Neu — SCE Innovation Ltd. | x-neu.com</p>
+  <p style="margin-top:8px;">Neuroscience × Artificial Intelligence × Human Compatibility</p>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

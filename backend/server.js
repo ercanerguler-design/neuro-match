@@ -1,8 +1,9 @@
 // Local development server — socket.io dahil
 // Production (Vercel) için: backend/api/index.js kullanılır
 
+const path = require('path');
 const dotenv = require('dotenv');
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const http = require('http');
 const { Server } = require('socket.io');
@@ -25,10 +26,14 @@ const io = new Server(server, {
 
 require('./socket/coachSocket')(io);
 
+// Weekly email cron job
+const { startWeeklyEmailJob } = require('./utils/weeklyEmail');
+startWeeklyEmailJob();
+
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
-  logger.info(`NEURO-MATCH Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+  logger.info(`X-Neu Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
 });
 
 process.on('unhandledRejection', (err) => {

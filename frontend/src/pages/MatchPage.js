@@ -6,10 +6,18 @@ import useAuthStore from '../store/authStore';
 
 const MATCH_TYPES = [
   { value: 'professional', label: 'İş Ortağı', icon: '💼', desc: 'En uyumlu iş ortağını bul' },
+  { value: 'startup', label: 'Startup Kurucu', icon: '🚀', desc: 'Tamamlayıcı kurucu bul' },
   { value: 'romantic', label: 'Romantik', icon: '💑', desc: 'Beyin uyumluluğuna göre partner' },
   { value: 'friendship', label: 'Arkadaşlık', icon: '🤝', desc: 'Derin arkadaşlık uyumu' },
   { value: 'personal', label: 'Kişisel', icon: '👥', desc: 'Genel uyumluluk analizi' },
 ];
+
+const CO_FOUNDER_ROLES = {
+  analytical: { idealRole: 'CTO / Ürün', pairs: ['creative', 'strategic'], tip: 'Sistemi sen kur, yaratıcı ortak vizyonu genişletsin.' },
+  creative: { idealRole: 'CPO / Tasarım', pairs: ['analytical', 'strategic'], tip: 'Ürünü sen şekillendir, analitik ortak tekniği yönetsin.' },
+  empathetic: { idealRole: 'COO / Müşteri', pairs: ['strategic', 'analytical'], tip: 'İnsan odaklı büyüme için stratejik kurucu gerekli.' },
+  strategic: { idealRole: 'CEO / Büyüme', pairs: ['analytical', 'creative'], tip: 'Şirketi sen yönet, yaratıcı ürünü, analitik tekniği geliştirsin.' },
+};
 
 export default function MatchPage() {
   const [selectedType, setSelectedType] = useState('professional');
@@ -45,7 +53,7 @@ export default function MatchPage() {
         <p style={{ color: '#94a3b8', marginBottom: 32 }}>Beyin tipine göre en uyumlu kişileri keşfet</p>
 
         {/* Match type selector */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 32 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 16, marginBottom: 32 }}>
           {MATCH_TYPES.map((type) => (
             <button key={type.value} onClick={() => setSelectedType(type.value)}
               style={{ padding: '20px 16px', borderRadius: 16, border: `2px solid ${selectedType === type.value ? '#00d4ff' : 'rgba(255,255,255,0.08)'}`, background: selectedType === type.value ? 'rgba(0,212,255,0.1)' : 'rgba(255,255,255,0.03)', cursor: 'pointer', color: '#fff', textAlign: 'center', transition: 'all 0.2s', fontFamily: 'Inter, sans-serif' }}>
@@ -55,6 +63,39 @@ export default function MatchPage() {
             </button>
           ))}
         </div>
+
+        {/* Startup Co-founder Panel */}
+        {selectedType === 'startup' && (() => {
+          const myBrain = user?.neuroProfile?.brainType;
+          const roleInfo = CO_FOUNDER_ROLES[myBrain] || CO_FOUNDER_ROLES.strategic;
+          const brainIcons = { analytical: '🔢', creative: '🎨', empathetic: '💙', strategic: '♟️' };
+          const brainLabels = { analytical: 'Analitik', creative: 'Yaratıcı', empathetic: 'Empatik', strategic: 'Stratejik' };
+          return (
+            <div className="card" style={{ marginBottom: 32, border: '1px solid rgba(124,58,237,0.3)', background: 'rgba(124,58,237,0.06)' }}>
+              <h3 style={{ fontWeight: 700, marginBottom: 16, color: '#7c3aed' }}>🚀 Startup Kurucu Profili</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+                <div style={{ padding: '16px', borderRadius: 12, background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)' }}>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>Senin Beyin Tipin</div>
+                  <div style={{ fontSize: 20, fontWeight: 800 }}>{brainIcons[myBrain]} {brainLabels[myBrain] || myBrain}</div>
+                  <div style={{ fontSize: 13, color: '#00d4ff', marginTop: 6, fontWeight: 600 }}>Önerilen Rol: {roleInfo.idealRole}</div>
+                </div>
+                <div style={{ padding: '16px', borderRadius: 12, background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>İdeal Kurucu Profili</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {roleInfo.pairs.map((bt) => (
+                      <span key={bt} style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 20, padding: '4px 12px', fontSize: 13, fontWeight: 600 }}>
+                        {brainIcons[bt]} {brainLabels[bt]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div style={{ padding: '12px 16px', borderRadius: 10, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', fontSize: 13, color: '#94a3b8', lineHeight: 1.6 }}>
+                💡 {roleInfo.tip}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Compatible users */}
         <div style={{ marginBottom: 40 }}>

@@ -67,7 +67,7 @@ export default function LandingPage() {
       <nav style={{ padding: '16px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)', position: 'sticky', top: 0, zIndex: 100, background: 'rgba(10,10,26,0.9)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 34, height: 34, borderRadius: 8, background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🧠</div>
-          <span style={{ fontSize: 20, fontWeight: 800, background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>NEURO-MATCH</span>
+          <span style={{ fontSize: 20, fontWeight: 800, background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>X-Neu</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
           <Link to="/pricing" style={{ color: '#94a3b8', textDecoration: 'none', fontWeight: 500, fontSize: 14 }}>{t.nav.pricing}</Link>
@@ -252,16 +252,80 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer style={{ padding: '40px', borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', color: '#64748b' }}>
-        <div style={{ fontSize: 22, marginBottom: 8 }}>🧠 NEURO-MATCH</div>
-        <p style={{ fontSize: 14 }}>{l.footer}</p>
-        <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginTop: 16, flexWrap: 'wrap' }}>
-          {(lang === 'en'
-            ? ['Privacy Policy', 'Terms of Service', 'GDPR', 'Contact']
-            : ['Gizlilik Politikası', 'Kullanım Koşulları', 'KVKK', 'İletişim']
-          ).map((link) => (
-            <button key={link} type="button" onClick={() => {}} style={{ color: '#64748b', textDecoration: 'none', fontSize: 14, background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}>{link}</button>
-          ))}
+      <footer style={{ padding: '60px 40px 40px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.3)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          {/* Top row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 48, marginBottom: 48 }}>
+            {/* Brand */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 0 20px rgba(0,212,255,0.3)' }}>⚡</div>
+                <span style={{ fontSize: 22, fontWeight: 900, background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: 1 }}>X-Neu</span>
+              </div>
+              <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>{l.footer}</p>
+              <p style={{ color: '#475569', fontSize: 12 }}>by <span style={{ color: '#94a3b8', fontWeight: 600 }}>SCE INNOVATION LTD. ŞTİ.</span></p>
+              <p style={{ color: '#475569', fontSize: 12, fontStyle: 'italic' }}>Software Circuit Engineer</p>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h4 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 18 }}>{lang === 'tr' ? 'İletişim' : 'Contact'}</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 16, flexShrink: 0, marginTop: 1 }}>📍</span>
+                  <span style={{ color: '#64748b', fontSize: 14, lineHeight: 1.5 }}>Çetin Emeç Bulvarı 25/3<br />Çankaya / Ankara</span>
+                </div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>✉️</span>
+                  <a href="mailto:sce@scegrup.com" style={{ color: '#00d4ff', fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>sce@scegrup.com</a>
+                </div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>📞</span>
+                  <a href="tel:+908508881889" style={{ color: '#64748b', fontSize: 14, textDecoration: 'none' }}>+90 0850 888 1 889</a>
+                </div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>💬</span>
+                  <a href="https://wa.me/905433929230" target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>Wp: +90 543 392 92 30</a>
+                </div>
+              </div>
+            </div>
+
+            {/* Legal Links */}
+            <div>
+              <h4 style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 18 }}>{lang === 'tr' ? 'Yasal' : 'Legal'}</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {[
+                  { to: '/privacy', label: lang === 'tr' ? '🔒 Gizlilik Politikası' : '🔒 Privacy Policy' },
+                  { to: '/terms', label: lang === 'tr' ? '📋 Kullanım Koşulları' : '📋 Terms of Use' },
+                  { to: '/kvkk', label: '🛡️ KVKK' },
+                  { to: '/contact', label: lang === 'tr' ? '📬 İletişim' : '📬 Contact' },
+                ].map(({ to, label }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    style={{
+                      color: '#64748b', textDecoration: 'none', fontSize: 14, fontWeight: 500,
+                      padding: '6px 12px', borderRadius: 8, transition: 'all 0.2s',
+                      background: 'transparent', border: '1px solid transparent',
+                      display: 'inline-block', width: 'fit-content',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#00d4ff'; e.currentTarget.style.background = 'rgba(0,212,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(0,212,255,0.2)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b'; e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <p style={{ color: '#374151', fontSize: 13 }}>
+              © 2026 X-Neu · SCE INNOVATION LTD. ŞTİ. {lang === 'tr' ? 'Tüm hakları saklıdır.' : 'All rights reserved.'}
+            </p>
+            <p style={{ color: '#374151', fontSize: 13 }}>🧠 X-Neu</p>
+          </div>
         </div>
       </footer>
     </div>

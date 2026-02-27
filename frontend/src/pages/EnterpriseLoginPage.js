@@ -71,7 +71,7 @@ export default function EnterpriseLoginPage() {
             fontSize: 26, fontWeight: 800, marginBottom: 8,
             background: 'linear-gradient(135deg, #c084fc, #7c3aed)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>NEURO-MATCH</h1>
+          }}>X-Neu</h1>
           <p style={{ color: '#94a3b8', fontSize: 15 }}>{te.loginTitle}</p>
           <p style={{ color: '#64748b', fontSize: 13, marginTop: 4 }}>{te.loginSubtitle}</p>
         </div>

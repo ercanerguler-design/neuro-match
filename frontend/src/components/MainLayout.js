@@ -36,6 +36,8 @@ export default function MainLayout({ children }) {
     { path: '/match', icon: '💑', label: t.nav.match },
     { path: '/coach', icon: '🤖', label: t.nav.coach },
     { path: '/reports', icon: '📊', label: t.nav.reports },
+    { path: '/content', icon: '🎓', label: 'İçerik' },
+    { path: '/community', icon: '🤝', label: 'Topluluk' },
     { path: '/profile', icon: '👤', label: t.nav.profile },
     ...(isEnterprise ? [{ path: '/enterprise', icon: '🏢', label: t.nav.enterprise }] : []),
     ...(user?.role === 'admin' ? [{ path: '/admin', icon: '🛡️', label: 'Admin Panel' }] : []),
@@ -102,7 +104,7 @@ export default function MainLayout({ children }) {
         <div style={{ padding: '24px 24px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <Link to="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, boxShadow: '0 0 16px rgba(0,212,255,0.3)' }}>🧠</div>
-            <span style={{ fontSize: 17, fontWeight: 800, background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>NEURO-MATCH</span>
+            <span style={{ fontSize: 17, fontWeight: 800, background: 'linear-gradient(135deg, #00d4ff, #7c3aed)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>X-Neu</span>
           </Link>
           {isEnterprise && (
             <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 6, padding: '3px 10px', fontSize: 11, color: '#c084fc', fontWeight: 700 }}>

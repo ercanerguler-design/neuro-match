@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from 'react-query';
 import toast from 'react-hot-toast';
 import { coachAPI } from '../services/api';
@@ -9,8 +9,39 @@ export default function CoachPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const messagesEndRef = useRef(null);
   const { user } = useAuthStore();
+
+  const speak = useCallback((text) => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/[#*_`]/g, '');
+    const utt = new SpeechSynthesisUtterance(clean);
+    utt.lang = 'tr-TR';
+    utt.rate = 0.95;
+    utt.pitch = 1.05;
+    const voices = window.speechSynthesis.getVoices();
+    const trVoice = voices.find((v) => v.lang.startsWith('tr'));
+    if (trVoice) utt.voice = trVoice;
+    utt.onstart = () => setSpeaking(true);
+    utt.onend = () => setSpeaking(false);
+    utt.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(utt);
+  }, []);
+
+  const stopSpeaking = () => {
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
+  };
+
+  // Sayfa terk edilince sesi durdur
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
 
   const { data: weeklyData } = useQuery('weekly-insights', coachAPI.getWeeklyInsights, {
     select: (res) => res.data.data,
@@ -41,12 +72,14 @@ export default function CoachPage() {
 
     try {
       const res = await coachAPI.askCoach(input);
+      const answer = res.data.data.answer;
       setMessages((prev) => [...prev, {
         id: Date.now() + 1,
         role: 'assistant',
-        content: res.data.data.answer,
+        content: answer,
         time: new Date(),
       }]);
+      if (voiceEnabled) speak(answer);
     } catch (err) {
       toast.error('AI koç yanıt veremedi, lütfen tekrar dene');
     } finally {
@@ -124,6 +157,20 @@ export default function CoachPage() {
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} />
               <span style={{ fontWeight: 600 }}>Neuro Coach</span>
               <span style={{ color: '#64748b', fontSize: 13 }}>Kişiselleştirilmiş AI - GPT-4</span>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+                {speaking && (
+                  <button onClick={stopSpeaking} title="Sesi Durdur"
+                    style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, padding: '5px 10px', fontSize: 12, color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    ⏹ Durdur
+                  </button>
+                )}
+                <button
+                  onClick={() => { setVoiceEnabled((v) => !v); if (speaking) stopSpeaking(); }}
+                  title={voiceEnabled ? 'Sesi Kapat' : 'Sesi Aç'}
+                  style={{ background: voiceEnabled ? 'rgba(0,212,255,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${voiceEnabled ? 'rgba(0,212,255,0.5)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 8, padding: '5px 12px', fontSize: 13, color: voiceEnabled ? '#00d4ff' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'Inter, sans-serif' }}>
+                  {voiceEnabled ? '🔊 Ses Açık' : '🔇 Ses Kapalı'}
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
@@ -140,8 +187,14 @@ export default function CoachPage() {
                         {line.replace(/\*\*(.*?)\*\*/g, '$1')}
                       </p>
                     ))}
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
                       {new Date(msg.time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                      {msg.role === 'assistant' && (
+                        <button onClick={() => speak(msg.content)} title="Sesli Oku"
+                          style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13, padding: 0, color: 'rgba(255,255,255,0.4)', lineHeight: 1 }}>
+                          🔊
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

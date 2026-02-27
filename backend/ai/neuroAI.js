@@ -51,7 +51,7 @@ class NeuroAI {
     const formattedAnswers = answers.map((a) => `Q[${a.category}]: ${a.answer}`).join('\n');
 
     const prompt = `
-Sen NEURO-MATCH platformunun yapay zeka nörobilim uzmanısın. 
+Sen X-Neu platformunun yapay zeka nörobilim uzmanısın. 
 Kullanıcının anket cevaplarını analiz edip kapsamlı bir nörolojik profil oluştur.
 
 ANKET CEVAPLARI:
@@ -253,7 +253,7 @@ JSON formatında döndür:
 
   async getDailyCoachMessage(userProfile, context) {
     const prompt = `
-Sen NEURO-MATCH'in kişisel AI koçusun. Kullanıcının nörolojik profiline göre bugünkü kişiselleştirilmiş koçluk mesajını oluştur.
+Sen X-Neu'nun kişisel AI koçusun. Kullanıcının nörolojik profiline göre bugünkü kişiselleştirilmiş koçluk mesajını oluştur.
 
 KULLANICI PROFİLİ:
 - İsim: ${context.name}

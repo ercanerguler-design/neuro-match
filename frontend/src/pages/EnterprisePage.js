@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import toast from 'react-hot-toast';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell, ResponsiveContainer, ReferenceLine } from 'recharts';
 import MainLayout from '../components/MainLayout';
 import useAuthStore from '../store/authStore';
 import { enterpriseAPI, adminAPI } from '../services/api';
@@ -57,7 +58,7 @@ export default function EnterprisePage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `neuro-match-report-${Date.now()}.json`;
+      a.download = `x-neu-report-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success(lang === 'tr' ? 'Rapor indirildi!' : 'Report downloaded!');
@@ -179,6 +180,79 @@ export default function EnterprisePage() {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Burnout Haritası */}
+          <div className="card" style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontWeight: 700 }}>
+                {lang === 'tr' ? '🔥 Takım Burnout Haritası' : '🔥 Team Burnout Map'}
+              </h3>
+              <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
+                {[{ color: '#10b981', label: lang === 'tr' ? 'Düşük (<30%)' : 'Low (<30%)' }, { color: '#f59e0b', label: lang === 'tr' ? 'Orta (30-60%)' : 'Medium (30-60%)' }, { color: '#ef4444', label: lang === 'tr' ? 'Yüksek (>60%)' : 'High (>60%)' }].map((item) => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: 2, background: item.color }} />
+                    <span style={{ color: '#94a3b8' }}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {(() => {
+              const members = hr.teamMembers || [
+                { name: lang === 'tr' ? 'Ayşe K.' : 'Alice K.', burnoutRisk: 18, brainType: 'analytical' },
+                { name: lang === 'tr' ? 'Mehmet S.' : 'Michael S.', burnoutRisk: 67, brainType: 'creative' },
+                { name: lang === 'tr' ? 'Zeynep A.' : 'Zoe A.', burnoutRisk: 42, brainType: 'empathetic' },
+                { name: lang === 'tr' ? 'Can T.' : 'Carl T.', burnoutRisk: 25, brainType: 'strategic' },
+                { name: lang === 'tr' ? 'Fatma B.' : 'Fiona B.', burnoutRisk: 78, brainType: 'empathetic' },
+                { name: lang === 'tr' ? 'Ali R.' : 'Alex R.', burnoutRisk: 35, brainType: 'analytical' },
+                { name: lang === 'tr' ? 'Selin M.' : 'Sara M.', burnoutRisk: 54, brainType: 'creative' },
+                { name: lang === 'tr' ? 'Burak Y.' : 'Brian Y.', burnoutRisk: 12, brainType: 'strategic' },
+              ];
+              const getBarColor = (risk) => risk < 30 ? '#10b981' : risk < 60 ? '#f59e0b' : '#ef4444';
+              const CustomTooltip = ({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const d = payload[0].payload;
+                const riskLabel = d.burnoutRisk < 30 ? (lang === 'tr' ? 'Düşük' : 'Low') : d.burnoutRisk < 60 ? (lang === 'tr' ? 'Orta' : 'Medium') : (lang === 'tr' ? 'Yüksek' : 'High');
+                return (
+                  <div style={{ background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '10px 14px', fontSize: 13 }}>
+                    <div style={{ fontWeight: 700, marginBottom: 4 }}>{d.name}</div>
+                    <div style={{ color: getBarColor(d.burnoutRisk) }}>Risk: %{d.burnoutRisk} — {riskLabel}</div>
+                    <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 2 }}>{d.brainType}</div>
+                  </div>
+                );
+              };
+              const highRisk = members.filter((m) => m.burnoutRisk >= 60);
+              return (
+                <>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={members} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                      <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <YAxis domain={[0, 100]} tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={(v) => `%${v}`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <ReferenceLine y={30} stroke="#10b981" strokeDasharray="4 2" strokeOpacity={0.4} />
+                      <ReferenceLine y={60} stroke="#f59e0b" strokeDasharray="4 2" strokeOpacity={0.4} />
+                      <Bar dataKey="burnoutRisk" radius={[4, 4, 0, 0]}>
+                        {members.map((entry, index) => (
+                          <Cell key={index} fill={getBarColor(entry.burnoutRisk)} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  {highRisk.length > 0 && (
+                    <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#ef4444', marginBottom: 8 }}>🚨 {lang === 'tr' ? 'Acil Dikkat Gereken Üyeler' : 'Members Needing Urgent Attention'}</div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        {highRisk.map((m) => (
+                          <span key={m.name} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#fca5a5' }}>
+                            {m.name} — %{m.burnoutRisk}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           {/* Quick Actions */}

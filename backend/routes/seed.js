@@ -10,7 +10,7 @@ router.post('/demo-users', async (req, res) => {
       return res.status(403).json({ success: false, message: 'Sadece development ortamında çalışır' });
     }
 
-    const existing = await User.countDocuments({ email: { $regex: '@demo.neuromatch' } });
+    const existing = await User.countDocuments({ email: { $regex: '@demo.x-neu' } });
     if (existing >= 8) {
       return res.status(200).json({ success: true, message: 'Demo kullanıcılar zaten mevcut', count: existing });
     }
@@ -19,14 +19,14 @@ router.post('/demo-users', async (req, res) => {
     const hashedPw = await bcrypt.hash('Demo1234!', 10);
 
     const demos = [
-      { name: 'Ayşe Kaya',    email: 'ayse@demo.neuromatch',    brainType: 'creative',   energyRhythm: 'night',    decisionStyle: 'intuitive', stressResponse: 'flight', socialPattern: 'extrovert', score: 82 },
-      { name: 'Mehmet Demir', email: 'mehmet@demo.neuromatch',  brainType: 'strategic',  energyRhythm: 'morning',  decisionStyle: 'rational',  stressResponse: 'fight',  socialPattern: 'introvert', score: 78 },
-      { name: 'Zeynep Şahin', email: 'zeynep@demo.neuromatch',  brainType: 'empathetic', energyRhythm: 'flexible', decisionStyle: 'emotional', stressResponse: 'freeze', socialPattern: 'ambivert',  score: 88 },
-      { name: 'Can Yılmaz',   email: 'can@demo.neuromatch',     brainType: 'analytical', energyRhythm: 'morning',  decisionStyle: 'rational',  stressResponse: 'fight',  socialPattern: 'introvert', score: 91 },
-      { name: 'Selin Arslan', email: 'selin@demo.neuromatch',   brainType: 'creative',   energyRhythm: 'afternoon',decisionStyle: 'intuitive', stressResponse: 'flight', socialPattern: 'extrovert', score: 75 },
-      { name: 'Emre Çelik',   email: 'emre@demo.neuromatch',    brainType: 'strategic',  energyRhythm: 'morning',  decisionStyle: 'rational',  stressResponse: 'fight',  socialPattern: 'ambivert',  score: 84 },
-      { name: 'Nisan Koç',    email: 'nisan@demo.neuromatch',   brainType: 'empathetic', energyRhythm: 'flexible', decisionStyle: 'emotional', stressResponse: 'freeze', socialPattern: 'extrovert', score: 79 },
-      { name: 'Burak Öztürk', email: 'burak@demo.neuromatch',   brainType: 'analytical', energyRhythm: 'night',    decisionStyle: 'rational',  stressResponse: 'fight',  socialPattern: 'introvert', score: 86 },
+      { name: 'Ayşe Kaya',    email: 'ayse@demo.x-neu',    brainType: 'creative',   energyRhythm: 'night',    decisionStyle: 'intuitive', stressResponse: 'flight', socialPattern: 'extrovert', score: 82 },
+      { name: 'Mehmet Demir', email: 'mehmet@demo.x-neu',  brainType: 'strategic',  energyRhythm: 'morning',  decisionStyle: 'rational',  stressResponse: 'fight',  socialPattern: 'introvert', score: 78 },
+      { name: 'Zeynep Şahin', email: 'zeynep@demo.x-neu',  brainType: 'empathetic', energyRhythm: 'flexible', decisionStyle: 'emotional', stressResponse: 'freeze', socialPattern: 'ambivert',  score: 88 },
+      { name: 'Can Yılmaz',   email: 'can@demo.x-neu',     brainType: 'analytical', energyRhythm: 'morning',  decisionStyle: 'rational',  stressResponse: 'fight',  socialPattern: 'introvert', score: 91 },
+      { name: 'Selin Arslan', email: 'selin@demo.x-neu',   brainType: 'creative',   energyRhythm: 'afternoon',decisionStyle: 'intuitive', stressResponse: 'flight', socialPattern: 'extrovert', score: 75 },
+      { name: 'Emre Çelik',   email: 'emre@demo.x-neu',    brainType: 'strategic',  energyRhythm: 'morning',  decisionStyle: 'rational',  stressResponse: 'fight',  socialPattern: 'ambivert',  score: 84 },
+      { name: 'Nisan Koç',    email: 'nisan@demo.x-neu',   brainType: 'empathetic', energyRhythm: 'flexible', decisionStyle: 'emotional', stressResponse: 'freeze', socialPattern: 'extrovert', score: 79 },
+      { name: 'Burak Öztürk', email: 'burak@demo.x-neu',   brainType: 'analytical', energyRhythm: 'night',    decisionStyle: 'rational',  stressResponse: 'fight',  socialPattern: 'introvert', score: 86 },
     ];
 
     const docs = demos.map((d) => ({

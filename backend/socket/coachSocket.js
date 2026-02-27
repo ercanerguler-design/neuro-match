@@ -40,7 +40,7 @@ module.exports = (io) => {
           messages: [
             {
               role: 'system',
-              content: `Sen NEURO-MATCH AI koçusun. Kullanıcı: ${socket.user.name}, Beyin tipi: ${socket.user.neuroProfile?.brainType || 'belirlenmedi'}. Kısa, kişiselleştirilmiş, motive edici cevaplar ver. Türkçe yaz.`,
+              content: `Sen X-Neu AI koçusun. Kullanıcı: ${socket.user.name}, Beyin tipi: ${socket.user.neuroProfile?.brainType || 'belirlenmedi'}. Kısa, kişiselleştirilmiş, motive edici cevaplar ver. Türkçe yaz.`,
             },
             { role: 'user', content: message },
           ],

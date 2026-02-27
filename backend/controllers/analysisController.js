@@ -5,6 +5,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const ErrorResponse = require('../utils/errorResponse');
 const neuroAI = require('../ai/neuroAI');
 const logger = require('../utils/logger');
+const { awardXP, awardBadge } = require('../utils/gamification');
 
 // @desc    Start questionnaire analysis
 // @route   POST /api/v1/analysis/questionnaire
@@ -165,6 +166,15 @@ const processAnalysis = async (analysisId, userId, type, data) => {
       summary: aiResult.brainTypeDescription,
       overallScore: aiResult.overallScore,
     });
+
+    // Gamification: award XP and badges
+    const analyses = await Analysis.countDocuments({ user: userId, status: 'completed' });
+    const isFirstAnalysis = analyses === 1;
+    await awardXP(userId, isFirstAnalysis ? 200 : 100, 'analysis-completed');
+    if (isFirstAnalysis) await awardBadge(userId, 'first_analysis');
+    if (aiResult.overallScore >= 90) await awardBadge(userId, 'perfect_score');
+    const reportCount = await Report.countDocuments({ user: userId });
+    if (reportCount >= 5) await awardBadge(userId, 'five_reports');
 
     logger.info(`Analysis ${analysisId} completed in ${Date.now() - startTime}ms`);
   } catch (error) {

@@ -67,6 +67,22 @@ const UserSchema = new mongoose.Schema(
       },
     ],
 
+    // Gamification
+    gamification: {
+      xp: { type: Number, default: 0 },
+      level: { type: Number, default: 1 },
+      streak: { type: Number, default: 0 },
+      lastCheckinDate: { type: Date },
+      badges: [
+        {
+          id: { type: String },
+          name: { type: String },
+          emoji: { type: String },
+          earnedAt: { type: Date, default: Date.now },
+        },
+      ],
+    },
+
     // Auth
     resetPasswordToken: String,
     resetPasswordExpire: Date,

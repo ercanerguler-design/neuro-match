@@ -8,7 +8,7 @@ const User = require('./models/User');
     await mongoose.connect(process.env.MONGO_URI);
     console.log('MongoDB bağlandı');
 
-    const existing = await User.countDocuments({ email: { $regex: '@demo.neuromatch' } });
+    const existing = await User.countDocuments({ email: { $regex: '@demo.x-neu' } });
     if (existing >= 8) {
       console.log('Demo kullanıcılar zaten mevcut:', existing);
       return process.exit(0);
@@ -17,14 +17,14 @@ const User = require('./models/User');
     const pw = await bcrypt.hash('Demo1234!', 10);
 
     const demos = [
-      { name: 'Ayşe Kaya',    email: 'ayse@demo.neuromatch',    brainType: 'creative',   score: 82 },
-      { name: 'Mehmet Demir', email: 'mehmet@demo.neuromatch',  brainType: 'strategic',  score: 78 },
-      { name: 'Zeynep Şahin', email: 'zeynep@demo.neuromatch',  brainType: 'empathetic', score: 88 },
-      { name: 'Can Yılmaz',   email: 'can@demo.neuromatch',     brainType: 'analytical', score: 91 },
-      { name: 'Selin Arslan', email: 'selin@demo.neuromatch',   brainType: 'creative',   score: 75 },
-      { name: 'Emre Çelik',   email: 'emre@demo.neuromatch',    brainType: 'strategic',  score: 84 },
-      { name: 'Nisan Koç',    email: 'nisan@demo.neuromatch',   brainType: 'empathetic', score: 79 },
-      { name: 'Burak Öztürk', email: 'burak@demo.neuromatch',   brainType: 'analytical', score: 86 },
+      { name: 'Ayşe Kaya',    email: 'ayse@demo.x-neu',    brainType: 'creative',   score: 82 },
+      { name: 'Mehmet Demir', email: 'mehmet@demo.x-neu',  brainType: 'strategic',  score: 78 },
+      { name: 'Zeynep Şahin', email: 'zeynep@demo.x-neu',  brainType: 'empathetic', score: 88 },
+      { name: 'Can Yılmaz',   email: 'can@demo.x-neu',     brainType: 'analytical', score: 91 },
+      { name: 'Selin Arslan', email: 'selin@demo.x-neu',   brainType: 'creative',   score: 75 },
+      { name: 'Emre Çelik',   email: 'emre@demo.x-neu',    brainType: 'strategic',  score: 84 },
+      { name: 'Nisan Koç',    email: 'nisan@demo.x-neu',   brainType: 'empathetic', score: 79 },
+      { name: 'Burak Öztürk', email: 'burak@demo.x-neu',   brainType: 'analytical', score: 86 },
     ];
 
     await User.collection.insertMany(demos.map((d) => ({

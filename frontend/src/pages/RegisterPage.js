@@ -31,6 +31,15 @@ export default function RegisterPage() {
     <div style={{ minHeight: '100vh', background: '#0a0a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative' }}>
       <div className="bg-orb" style={{ width: 400, height: 400, background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)', top: 0, right: 0 }} />
 
+      {/* Geri / Anasayfa butonu */}
+      <div style={{ position: 'fixed', top: 20, left: 20, zIndex: 100 }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '7px 14px', color: '#94a3b8', fontSize: 13, fontWeight: 600, textDecoration: 'none', transition: 'all .2s' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(0,212,255,0.1)'; e.currentTarget.style.color = '#00d4ff'; e.currentTarget.style.borderColor = 'rgba(0,212,255,0.3)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}>
+          ← {lang === 'tr' ? 'Anasayfa' : 'Home'}
+        </Link>
+      </div>
+
       {/* Language Toggle */}
       <div style={{ position: 'fixed', top: 20, right: 20, display: 'flex', gap: 8, zIndex: 100 }}>
         {['tr', 'en'].map((l) => (

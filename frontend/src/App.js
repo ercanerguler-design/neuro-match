@@ -20,6 +20,12 @@ const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const EnterprisePage = React.lazy(() => import('./pages/EnterprisePage'));
 const EnterpriseLoginPage = React.lazy(() => import('./pages/EnterpriseLoginPage'));
 const AdminPage = React.lazy(() => import('./pages/AdminPage'));
+const PrivacyPolicyPage = React.lazy(() => import('./pages/PrivacyPolicyPage'));
+const TermsPage = React.lazy(() => import('./pages/TermsPage'));
+const KVKKPage = React.lazy(() => import('./pages/KVKKPage'));
+const ContactPage = React.lazy(() => import('./pages/ContactPage'));
+const ContentPage = React.lazy(() => import('./pages/ContentPage'));
+const CommunityPage = React.lazy(() => import('./pages/CommunityPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,7 +40,7 @@ const LoadingScreen = () => (
   }}>
     <div style={{ fontSize: 48 }}>🧠</div>
     <div className="loading-spinner" style={{ width: 40, height: 40 }}></div>
-    <p style={{ color: '#00d4ff', fontWeight: 600 }}>NEURO-MATCH</p>
+    <p style={{ color: '#00d4ff', fontWeight: 600 }}>X-Neu</p>
   </div>
 );
 
@@ -82,7 +88,15 @@ export default function App() {
             <Route path="/coach" element={<ProtectedRoute><CoachPage /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/content" element={<ProtectedRoute><ContentPage /></ProtectedRoute>} />
+            <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+
+            {/* Legal & Contact */}
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/kvkk" element={<KVKKPage />} />
+            <Route path="/contact" element={<ContactPage />} />
 
             {/* 404 */}
             <Route path="*" element={<Navigate to="/" replace />} />

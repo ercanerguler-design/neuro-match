@@ -337,7 +337,7 @@ export default function AdminPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 900, marginBottom: 4 }}>🛡️ Admin Paneli</h1>
-            <p style={{ color: '#94a3b8', fontSize: 14 }}>NEURO-MATCH — Sistem Yönetimi</p>
+            <p style={{ color: '#94a3b8', fontSize: 14 }}>X-Neu — Sistem Yönetimi</p>
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <Btn onClick={() => openCreate('user')} color="#00d4ff" style={{ padding: '10px 18px', fontSize: 13 }}>➕ Üye Ekle</Btn>

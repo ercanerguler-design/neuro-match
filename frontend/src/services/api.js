@@ -105,4 +105,11 @@ export const adminAPI = {
   resetPassword: (id, newPassword) => api.post(`/admin/users/${id}/reset-password`, { newPassword }),
 };
 
+// Community
+export const communityAPI = {
+  getPosts: (room) => api.get(`/community/${room}`),
+  createPost: (room, content) => api.post('/community', { room, content }),
+  likePost: (id) => api.post(`/community/${id}/like`),
+};
+
 export default api;
