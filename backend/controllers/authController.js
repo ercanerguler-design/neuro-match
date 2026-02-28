@@ -55,7 +55,8 @@ exports.register = asyncHandler(async (req, res, next) => {
 // @route   POST /api/v1/auth/login
 // @access  Public
 exports.login = asyncHandler(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { password } = req.body;
+  const email = req.body.email ? req.body.email.toLowerCase().trim() : '';
 
   if (!email || !password) {
     return next(new ErrorResponse('Email ve şifre gereklidir', 400));
