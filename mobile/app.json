@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "X-Neu",
+    "slug": "xneu-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "xneu",
+    "splash": {
+      "backgroundColor": "#06061a"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.sceinnovation.xneu"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#06061a"
+      },
+      "package": "com.sceinnovation.xneu",
+      "permissions": [
+        "NOTIFICATIONS",
+        "VIBRATE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "jsEngine": "hermes",
+    "newArchEnabled": true,
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "57b45688-4529-4995-92da-a34573c735ee"
+      }
+    },
+    "owner": "scegrup"
+  }
+}
