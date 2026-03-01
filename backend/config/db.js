@@ -6,7 +6,11 @@ let cached = null;
 const connectDB = async () => {
   if (cached && mongoose.connection.readyState === 1) return cached;
   try {
-    cached = await mongoose.connect(process.env.MONGO_URI);
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+    if (!mongoUri) {
+      throw new Error('Mongo connection string is missing. Set MONGO_URI or MONGODB_URI.');
+    }
+    cached = await mongoose.connect(mongoUri);
     logger.info(`MongoDB Connected: ${mongoose.connection.host}`);
     return cached;
   } catch (error) {

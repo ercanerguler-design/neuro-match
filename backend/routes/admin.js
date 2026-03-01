@@ -60,7 +60,6 @@ router.get('/stats', asyncHandler(async (req, res) => {
 
 // ─── POST /admin/users — Yeni kullanıcı oluştur ─────────────────────────────
 router.post('/users', asyncHandler(async (req, res) => {
-  const bcrypt = require('bcryptjs');
   const {
     name, email, password = 'Neuro2024!',
     role = 'user', plan = 'free', status = 'inactive',
@@ -76,9 +75,6 @@ router.post('/users', asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, error: 'Bu email zaten kayıtlı' });
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const hashed = await bcrypt.hash(password, salt);
-
   const subscriptionDays = plan === 'enterprise' ? 365 : plan === 'premium' ? 180 : plan === 'basic' ? 30 : 0;
   const calculatedEndDate = endDate
     ? new Date(endDate)
@@ -89,7 +85,7 @@ router.post('/users', asyncHandler(async (req, res) => {
   const user = await User.create({
     name,
     email: email.toLowerCase(),
-    password: hashed,
+    password,
     role,
     phone,
     company,
