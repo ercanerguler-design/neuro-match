@@ -5,8 +5,12 @@ const asyncHandler = require('../middleware/asyncHandler');
 const ErrorResponse = require('../utils/errorResponse');
 const { protect } = require('../middleware/auth');
 const { updateStreak, awardBadge, awardXP, getLevelFromXP, xpForLevel } = require('../utils/gamification');
-const OpenAI = require('openai');
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+let openai = null;
+if (process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.startsWith('sk-your')) {
+  const OpenAI = require('openai');
+  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 router.use(protect);
 
@@ -53,7 +57,7 @@ router.post('/checkin', asyncHandler(async (req, res) => {
   // AI mood analysis — run for last 3+ entries
   let aiInsight = null;
   const recent = user.dailyCheckin.slice(-7);
-  if (recent.length >= 3) {
+  if (openai && recent.length >= 3) {
     try {
       const avg = (arr) => (arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1);
       const summary = [
