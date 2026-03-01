@@ -51,4 +51,4 @@ export const BrainTypes = {
   },
 };
 
-export const API_URL = 'https://x-neu.com/api/v1';
+export const API_URL = 'https://neuro-backend-pi.vercel.app/api/v1';

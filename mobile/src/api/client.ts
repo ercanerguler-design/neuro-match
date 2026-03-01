@@ -4,11 +4,10 @@ import { API_URL } from '../constants/colors';
 
 const API_BASE_CANDIDATES = Array.from(
   new Set([
+    'https://neuro-backend-pi.vercel.app/api/v1',
     'https://neuro-backend.vercel.app/api/v1',
     API_URL,
     'https://x-neu.com/api/v1',
-    'https://www.x-neu.com/api/v1',
-    'https://neuro-fronted.vercel.app/api/v1',
   ])
 );
 
