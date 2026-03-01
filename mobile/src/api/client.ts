@@ -4,18 +4,38 @@ import { API_URL } from '../constants/colors';
 
 const API_BASE_CANDIDATES = Array.from(
   new Set([
+    'https://neuro-backend.vercel.app/api/v1',
     API_URL,
     'https://x-neu.com/api/v1',
     'https://www.x-neu.com/api/v1',
-    'https://neuro-backend.vercel.app/api/v1',
+    'https://neuro-fronted.vercel.app/api/v1',
   ])
 );
 
 let activeBaseURL = API_BASE_CANDIDATES[0];
 
+const LAST_GOOD_BASE_KEY = 'xneu_last_good_base';
+let activeBaseInitialized = false;
+
+const initActiveBase = async () => {
+  if (activeBaseInitialized) return;
+  activeBaseInitialized = true;
+  const lastGood = await SecureStore.getItemAsync(LAST_GOOD_BASE_KEY);
+  if (lastGood && API_BASE_CANDIDATES.includes(lastGood)) {
+    activeBaseURL = lastGood;
+  }
+};
+
+const persistActiveBase = async (baseURL?: string) => {
+  if (!baseURL) return;
+  if (!API_BASE_CANDIDATES.includes(baseURL)) return;
+  activeBaseURL = baseURL;
+  await SecureStore.setItemAsync(LAST_GOOD_BASE_KEY, baseURL);
+};
+
 const shouldRetryWithNextBase = (status?: number) => {
   if (!status) return true;
-  return [404, 405, 500, 502, 503, 504].includes(status);
+  return [404, 405, 429, 500, 502, 503, 504].includes(status);
 };
 
 const api = axios.create({
@@ -26,6 +46,7 @@ const api = axios.create({
 
 // Token'ı her isteğe ekle
 api.interceptors.request.use(async (config) => {
+  await initActiveBase();
   config.baseURL = config.baseURL || activeBaseURL;
   const token = await SecureStore.getItemAsync('xneu_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
@@ -34,7 +55,11 @@ api.interceptors.request.use(async (config) => {
 
 // 401 gelirse logout
 api.interceptors.response.use(
-  (res) => res,
+  async (res) => {
+    const usedBase = res.config?.baseURL;
+    await persistActiveBase(usedBase);
+    return res;
+  },
   async (error) => {
     const status = error.response?.status;
 
@@ -55,7 +80,7 @@ api.interceptors.response.use(
       if (nextBase) {
         originalConfig.__triedBases = [...triedBases, currentBase];
         originalConfig.baseURL = nextBase;
-        activeBaseURL = nextBase;
+        await persistActiveBase(nextBase);
         return api.request(originalConfig);
       }
     }
@@ -63,6 +88,26 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const getHumanReadableApiError = (error: any, fallback: string) => {
+  const status = error?.response?.status;
+  const serverMessage = error?.response?.data?.message;
+  if (serverMessage) return serverMessage;
+
+  if (!status) {
+    return 'Sunucuya bağlanılamadı. İnternet bağlantını kontrol edip tekrar dene.';
+  }
+
+  if (status >= 500) {
+    return 'Sunucuda geçici bir hata oluştu. Lütfen birazdan tekrar dene.';
+  }
+
+  if (status === 429) {
+    return 'Çok fazla deneme yapıldı. Lütfen kısa süre sonra tekrar dene.';
+  }
+
+  return fallback;
+};
 
 // ── AUTH ──
 export const authAPI = {
